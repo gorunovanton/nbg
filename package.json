@@ -1,0 +1,15 @@
+{
+  "name": "nbg",
+  "version": "0.0.1",
+  "author": "Anton Goryunov",
+  "license": "MIT",
+  "dependencies": {
+    "fs-extra": "^8.1.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^8.0.1",
+    "node-addon-api": "^1.7.1",
+    "ts-node": "^8.4.1",
+    "typescript": "^3.7.2"
+  }
+}

@@ -30,3 +30,18 @@
 *.exe
 *.out
 *.app
+
+# External Node.js modules
+/node_modules/
+
+# Build directories
+/build/
+/cmake-build-debug/
+
+# Generated files
+/binding.cpp
+/binding.gyp
+
+
+/yarn.lock
+/package-lock.json
