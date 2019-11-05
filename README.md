@@ -1,0 +1,2 @@
+# nbg
+Node bindings generator
