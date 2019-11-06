@@ -4,9 +4,9 @@
   "author": "Anton Goryunov",
   "license": "MIT",
   "scripts": {
-    "generate": "ts-node nbg.ts",
-    "configure": "node-gyp configure",
-    "build": "node-gyp build",
+    "generate": "ts-node src/nbg.ts",
+    "configure": "cd output && node-gyp configure",
+    "build": "cd output && node-gyp build",
     "make": "npm run generate && npm run build"
   },
   "dependencies": {

@@ -36,6 +36,7 @@
 
 # Build directories
 /build/
+/output/
 /cmake-build-debug/
 
 # Generated files
