@@ -3,6 +3,12 @@
   "version": "0.0.1",
   "author": "Anton Goryunov",
   "license": "MIT",
+  "scripts": {
+    "generate": "ts-node nbg.ts",
+    "configure": "node-gyp configure",
+    "build": "node-gyp build",
+    "make": "npm run generate && npm run build"
+  },
   "dependencies": {
     "fs-extra": "^8.1.0"
   },
