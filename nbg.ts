@@ -25,7 +25,35 @@ const testLibraryData: ILibraryData = {
 export async function generateLibrary() {
     const libraryFilename = 'binding.cpp';
 
-    const addonCode = '#include <napi.h>';
+    const addonCode = `
+#include <napi.h>
+
+class DynamicLibrary : public Napi::ObjectWrap<DynamicLibrary> {
+public:
+    static void Init(Napi::Env env, Napi::Object exports);
+    
+    Napi::Value hello(const Napi::CallbackInfo& args);
+}; // class DynamicLibrary
+
+void DynamicLibrary::Init(const Napi::Env env, Napi::Object exports) {
+    const Napi::HandleScope scope(env);
+
+    const auto func = DefineClass(env, "DynamicLibrary", {
+        InstanceMethod("hello", &DynamicLibrary::hello),
+    });
+
+    constructor = Napi::Persistent(func);
+    constructor.SuppressDestruct();
+    exports.Set("DynamicLibrary", func);
+}
+
+Napi::Object Init(const Napi::Env env, const Napi::Object exports) {
+    DynamicLibrary::Init(env, exports);
+    return exports;
+}
+
+NODE_API_MODULE(addon, Init)
+`;
 
     const gypFilename = 'binding.gyp';
     const gypSource = {
@@ -53,7 +81,7 @@ export async function generateLibrary() {
         ],
     };
 
-    const gypFileContent = JSON.stringify(gypSource);
+    const gypFileContent = JSON.stringify(gypSource, null, 4);
 
     await fs.writeFile(libraryFilename, addonCode);
     await fs.writeFile(gypFilename, gypFileContent);
