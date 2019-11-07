@@ -5,8 +5,8 @@
   "license": "MIT",
   "scripts": {
     "generate": "ts-node src/nbg.ts",
-    "configure": "cd output && node-gyp configure",
-    "build": "cd output && node-gyp build",
+    "configure": "cd output && cmake-js configure",
+    "build": "cd output && conan install . && cmake-js build",
     "make": "npm run generate && npm run build"
   },
   "dependencies": {

@@ -3,6 +3,7 @@ import * as path from 'path'
 
 import * as gyp from "./templates/gyp";
 import * as cmake from "./templates/cmake";
+import * as conan from "./templates/conan";
 
 export interface IStructure {
 }
@@ -100,10 +101,12 @@ NODE_API_MODULE(addon, Init)
 
     const gypFilename = path.join('output', 'binding.gyp');
     const cmakeFilename = path.join('output', 'CMakeLists.txt');
+    const conanFilename = path.join('output', 'conanfile.txt');
 
     await fs.writeFile(libraryFilename, addonCode);
     await fs.writeFile(gypFilename, gyp.template);
     await fs.writeFile(cmakeFilename, cmake.template);
+    await fs.writeFile(conanFilename, conan.template);
 }
 
 generateLibrary().then(() => console.log('finished'));
