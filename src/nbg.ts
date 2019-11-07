@@ -1,6 +1,8 @@
 import * as fs from 'fs-extra'
 import * as path from 'path'
-import {gypTemplate} from "./templates/gyp";
+
+import * as gyp from "./templates/gyp";
+import * as cmake from "./templates/cmake";
 
 export interface IStructure {
 }
@@ -95,11 +97,13 @@ Napi::Object Init(const Napi::Env env, const Napi::Object exports) {
 
 NODE_API_MODULE(addon, Init)
 `;
+
     const gypFilename = path.join('output', 'binding.gyp');
-    const gypFileContent = JSON.stringify(gypTemplate, null, 4);
+    const cmakeFilename = path.join('output', 'CMakeLists.txt');
 
     await fs.writeFile(libraryFilename, addonCode);
-    await fs.writeFile(gypFilename, gypFileContent);
+    await fs.writeFile(gypFilename, gyp.template);
+    await fs.writeFile(cmakeFilename, cmake.template);
 }
 
 generateLibrary().then(() => console.log('finished'));

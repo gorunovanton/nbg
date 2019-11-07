@@ -1,8 +1,11 @@
-export const gypTemplate = {
+const projectName = 'binding';
+const sourceFilename = 'binding.cpp';
+
+export const template = JSON.stringify({
     "targets": [
         {
-            "target_name": "binding",
-            "sources": ["binding.cpp"],
+            "target_name": projectName,
+            "sources": [sourceFilename],
             'include_dirs': [
                 "<!@(node -p \"require('node-addon-api').include\")"
             ],
@@ -21,4 +24,4 @@ export const gypTemplate = {
             },
         }
     ],
-};
+}, null, 4);
