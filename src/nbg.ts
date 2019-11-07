@@ -23,7 +23,13 @@ const testLibraryData: ILibraryData = {
         name: 'hello',
         returnType: 'void',
         arguments: []
-    }]
+    },
+        {
+            name: 'get_five',
+            returnType: 'int32',
+            arguments: []
+        }
+    ]
 };
 
 export async function generateLibrary() {
@@ -36,13 +42,15 @@ export async function generateLibrary() {
     }).join('\n');
 
     const functionsEnumeration = testLibraryData.functions.map(value => {
-        return `InstanceMethod("${value.name}", &Library::${value.name}),`
+        return `        InstanceMethod("${value.name}", &Library::${value.name})`
     }).join(',\n');
 
     const functionDefinitions = testLibraryData.functions.map(value => {
         const returnType = value.returnType === 'void' ? 'void' : 'Napi::Value';
-        return `${returnType} Library::${value.name}(const Napi::CallbackInfo& args){}`
-    }).join('\n\n');
+        return `${returnType} Library::${value.name}(const Napi::CallbackInfo& args){
+    const auto env = args.Env();
+    ${returnType === 'void' ? '' : 'return env.Undefined();'}
+}`}).join('\n\n');
 
     const addonCode = `
 #include <napi.h>
@@ -70,7 +78,7 @@ void Library::Init(const Napi::Env env, Napi::Object exports) {
     const Napi::HandleScope scope(env);
 
     const auto func = DefineClass(env, "Library", {
-        ${functionsEnumeration}
+${functionsEnumeration}
     });
 
     constructor = Napi::Persistent(func);
