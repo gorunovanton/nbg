@@ -1,27 +1,32 @@
 import * as path from 'path'
 
-export class Library{
-    constructor(){
-        const addon = require('bindings')({
+interface IAddon {
+    Library: any
+}
+
+export class Library {
+    private readonly addon: IAddon;
+    private readonly library: any;
+
+    constructor() {
+        this.addon = require('bindings')({
             bindings: 'binding.node',
             module_root: path.dirname(__filename),
             try: [['module_root', 'build', 'bin', 'bindings']]
         });
+        console.log('addon', this.addon);
 
+        this.library = new this.addon.Library();
+        console.log('library: ', this.library);
 
-        console.log('addon', addon);
-
-        const library = new addon.Library();
-        console.log('library: ', library);
-
-        console.log('library.hello', library.hello);
-        console.log('library.hello()', library.hello());
+        console.log('library.hello', this.library.hello);
+        console.log('library.hello()', this.library.hello());
     }
 
-    //NBG_LIBRARY_FUNCTIONS
+//NBG_LIBRARY_FUNCTIONS
 }
 
-function main(){
+function main() {
     const lib = new Library();
     console.log('Finished');
 }

@@ -8,20 +8,50 @@ import * as conan from "./templates/conan";
 export interface IStructure {
 }
 
-type DataTypeT = 'pointer' | 'void' | 'int8' | 'int16' | 'int32' | 'int64' | 'float32' | 'float64' // TODO extend
+type NativeTypeT = 'pointer' | 'void' | 'int8' | 'int16' | 'int32' | 'int64' | 'float32' | 'float64' // TODO extend
+
+function assertUnreachable(x: never): never {
+    throw new Error("Didn't expect to get here");
+}
+
+function toCamelCase(str: string) {
+    return str.replace(/^([A-Z])|[\s-_](\w)/g, function (match, p1, p2, offset) {
+        if (p2) return p2.toUpperCase();
+        return p1.toLowerCase();
+    });
+}
+
+function toTsType(nativeType: NativeTypeT) {
+    switch (nativeType) {
+        case "pointer":
+            throw new Error('Not yet implemented');
+        case "void":
+            return 'void';
+        case "int8":
+        case "int16":
+        case "int32":
+        case "int64":
+        case "float32":
+        case "float64":
+            return 'number';
+    }
+
+    assertUnreachable(nativeType);
+}
 
 export interface IFunction {
     name: string
-    arguments: DataTypeT[]
-    returnType: DataTypeT
+    arguments: NativeTypeT[]
+    returnType: NativeTypeT
 }
 
 export interface ILibraryData {
-    structures?: IStructure[]
-    functions?: IFunction[]
+    structures: IStructure[]
+    functions: IFunction[]
 }
 
 const testLibraryData: ILibraryData = {
+    structures: [],
     functions: [{
         name: 'hello',
         returnType: 'void',
@@ -35,10 +65,10 @@ const testLibraryData: ILibraryData = {
     ]
 };
 
-async function saveWithoutOverride(filename: string, data: string){
-    if (await fs.pathExists(filename)){
+async function saveWithoutOverride(filename: string, data: string) {
+    if (await fs.pathExists(filename)) {
         const oldData = await fs.readFile(filename);
-        if (oldData.toString() === data){
+        if (oldData.toString() === data) {
             return
         }
     }
@@ -64,7 +94,16 @@ export async function generateLibrary() {
         return `${returnType} Library::${value.name}(const Napi::CallbackInfo& args){
     const auto env = args.Env();
     ${returnType === 'void' ? '' : 'return env.Undefined();'}
-}`}).join('\n\n');
+}`
+    }).join('\n\n');
+
+    const tsFunctionDefinitions = testLibraryData.functions.map(value => {
+        const returnType = toTsType(value.returnType);
+        const functionName = toCamelCase(value.name);
+        return `    public ${functionName}(): ${returnType} {
+        return this.library.${value.name}();
+    }`
+    }).join('\n\n');
 
     const gypFilename = path.join('output', 'binding.gyp');
     const cmakeFilename = path.join('output', 'CMakeLists.txt');
@@ -79,7 +118,7 @@ export async function generateLibrary() {
 
     const tsLibraryTemplate = (await fs.readFile('src/templates/library.ts')).toString();
     const tsLibraryCode = tsLibraryTemplate
-        .replace(/\/\/NBG_LIBRARY_FUNCTIONS/g, '');
+        .replace(/\/\/NBG_LIBRARY_FUNCTIONS/g, tsFunctionDefinitions);
 
     await saveWithoutOverride(tsFilename, tsLibraryCode);
     await saveWithoutOverride(libraryFilename, addonCode);
