@@ -7,9 +7,12 @@
     "generate": "ts-node src/nbg.ts",
     "configure": "cd output && cmake-js configure",
     "build": "cd output && conan install . && cmake-js build",
-    "make": "npm run generate && npm run build"
+    "make": "npm run generate && npm run build",
+    "run": "cd output && ts-node library.ts",
+    "makeAndRun": "npm run make && npm run run"
   },
   "dependencies": {
+    "bindings": "^1.5.0",
     "fs-extra": "^8.1.0"
   },
   "devDependencies": {

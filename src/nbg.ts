@@ -35,6 +35,17 @@ const testLibraryData: ILibraryData = {
     ]
 };
 
+async function saveWithoutOverride(filename: string, data: string){
+    if (await fs.pathExists(filename)){
+        const oldData = await fs.readFile(filename);
+        if (oldData.toString() === data){
+            return
+        }
+    }
+
+    await fs.writeFile(filename, data);
+}
+
 export async function generateLibrary() {
     const libraryFilename = path.join('output', 'binding.cpp');
     await fs.ensureDir('output');
@@ -44,7 +55,7 @@ export async function generateLibrary() {
         return `${returnType} ${value.name}(const Napi::CallbackInfo& args);`
     }).join('\n');
 
-    const functionsEnumeration = testLibraryData.functions.map(value => {
+    const functionEnumeration = testLibraryData.functions.map(value => {
         return `        InstanceMethod("${value.name}", &Library::${value.name})`
     }).join(',\n');
 
@@ -55,58 +66,26 @@ export async function generateLibrary() {
     ${returnType === 'void' ? '' : 'return env.Undefined();'}
 }`}).join('\n\n');
 
-    const addonCode = `
-#include <napi.h>
-
-class Library : public Napi::ObjectWrap<Library> {
-public:
-    static void Init(Napi::Env env, Napi::Object exports);
-    Library(const Napi::CallbackInfo& info);
-    
-    ${functionDeclarations}
-    
-private:
-    static Napi::FunctionReference constructor;
-}; // class Library
-
-Napi::FunctionReference Library::constructor;
-
-Library::Library(const Napi::CallbackInfo& info)
-    : Napi::ObjectWrap<Library>(info) {
-  Napi::Env env = info.Env();
-  Napi::HandleScope scope(env);
-}
-
-void Library::Init(const Napi::Env env, Napi::Object exports) {
-    const Napi::HandleScope scope(env);
-
-    const auto func = DefineClass(env, "Library", {
-${functionsEnumeration}
-    });
-
-    constructor = Napi::Persistent(func);
-    constructor.SuppressDestruct();
-    exports.Set("Library", func);
-}
-
-${functionDefinitions}
-
-Napi::Object Init(const Napi::Env env, const Napi::Object exports) {
-    Library::Init(env, exports);
-    return exports;
-}
-
-NODE_API_MODULE(addon, Init)
-`;
-
     const gypFilename = path.join('output', 'binding.gyp');
     const cmakeFilename = path.join('output', 'CMakeLists.txt');
     const conanFilename = path.join('output', 'conanfile.txt');
+    const tsFilename = path.join('output', 'library.ts');
 
-    await fs.writeFile(libraryFilename, addonCode);
-    await fs.writeFile(gypFilename, gyp.template);
-    await fs.writeFile(cmakeFilename, cmake.template);
-    await fs.writeFile(conanFilename, conan.template);
+    const addonTemplate = (await fs.readFile('src/templates/addon.cpp')).toString();
+    const addonCode = addonTemplate
+        .replace(/\/\/NBG_FUNCTION_DECLARATIONS/g, functionDeclarations)
+        .replace(/\/\/NBG_FUNCTION_ENUMERATION/g, functionEnumeration)
+        .replace(/\/\/NBG_FUNCTION_DEFINITIONS/g, functionDefinitions);
+
+    const tsLibraryTemplate = (await fs.readFile('src/templates/library.ts')).toString();
+    const tsLibraryCode = tsLibraryTemplate
+        .replace(/\/\/NBG_LIBRARY_FUNCTIONS/g, '');
+
+    await saveWithoutOverride(tsFilename, tsLibraryCode);
+    await saveWithoutOverride(libraryFilename, addonCode);
+    await saveWithoutOverride(gypFilename, gyp.template);
+    await saveWithoutOverride(cmakeFilename, cmake.template);
+    await saveWithoutOverride(conanFilename, conan.template);
 }
 
 generateLibrary().then(() => console.log('finished'));
