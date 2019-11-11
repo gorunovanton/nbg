@@ -4,88 +4,10 @@ import * as path from 'path'
 import * as gyp from "./templates/gyp";
 import * as cmake from "./templates/cmake";
 import * as conan from "./templates/conan";
-
-export interface IStructure {
-}
-
-type NativeTypeT = 'pointer' | 'void' | 'int8' | 'int16' | 'int32' | 'int64' | 'float32' | 'float64' // TODO extend
-type CppTypeT =
-    'std::int8_t'
-    | 'std::int16_t'
-    | 'std::int32_t'
-    | 'std::int64_t'
-    | 'std:uint8_t'
-    | 'std::uint16_t'
-    | 'std::uint32_t'
-    | 'std::uint64_t'
-    | 'float'
-    | 'double'
-    | 'void'
-    | 'void*'
-
-function assertUnreachable(x: never): never {
-    throw new Error("Didn't expect to get here");
-}
-
-function toCamelCase(str: string) {
-    return str.replace(/^([A-Z])|[\s-_](\w)/g, function (match, p1, p2, offset) {
-        if (p2) return p2.toUpperCase();
-        return p1.toLowerCase();
-    });
-}
-
-function toTsType(nativeType: NativeTypeT) {
-    switch (nativeType) {
-        case "pointer":
-            throw new Error('Not yet implemented');
-        case "void":
-            return 'void';
-        case "int8":
-        case "int16":
-        case "int32":
-        case "int64":
-        case "float32":
-        case "float64":
-            return 'number';
-    }
-
-    assertUnreachable(nativeType);
-}
-
-
-function toCppType(nativeType: NativeTypeT): CppTypeT {
-    switch (nativeType) {
-        case "pointer":
-            return 'void*';
-        case "void":
-            return 'void';
-        case "int8":
-            return 'std::int8_t';
-        case "int16":
-            return 'std::int16_t';
-        case "int32":
-            return 'std::int32_t';
-        case "int64":
-            return 'std::int64_t';
-        case "float32":
-            return 'float';
-        case "float64":
-            return 'double';
-    }
-
-    assertUnreachable(nativeType);
-}
-
-export interface IFunction {
-    name: string
-    arguments: NativeTypeT[]
-    returnType: NativeTypeT
-}
-
-export interface ILibraryData {
-    structures: IStructure[]
-    functions: IFunction[]
-}
+import {ILibraryData} from "./common";
+import {CPlusPlus} from "./cpp-generator";
+import {TS} from "./ts-generator";
+import {saveWithoutOverride} from "./utils";
 
 const testLibraryData: ILibraryData = {
     structures: [],
@@ -102,51 +24,14 @@ const testLibraryData: ILibraryData = {
     ]
 };
 
-async function saveWithoutOverride(filename: string, data: string) {
-    if (await fs.pathExists(filename)) {
-        const oldData = await fs.readFile(filename);
-        if (oldData.toString() === data) {
-            return
-        }
-    }
-
-    await fs.writeFile(filename, data);
-}
-
 export async function generateLibrary() {
     const libraryFilename = path.join('output', 'binding.cpp');
     await fs.ensureDir('output');
 
-    const functionDeclarations = testLibraryData.functions.map(value => {
-        const returnType = value.returnType === 'void' ? 'void' : 'Napi::Value';
-        return `${returnType} ${value.name}(const Napi::CallbackInfo& args);`
-    }).join('\n');
-
-    const functionEnumeration = testLibraryData.functions.map(value => {
-        return `        InstanceMethod("${value.name}", &Library::${value.name})`
-    }).join(',\n');
-
-    const functionDefinitions = testLibraryData.functions.map(value => {
-        const returnType = value.returnType === 'void' ? 'void' : 'Napi::Value';
-        return `${returnType} Library::${value.name}(const Napi::CallbackInfo& args){
-    const auto env = args.Env();
-    try{
-        const auto function = m_library.get<${toCppType(value.returnType)}()>("${value.name}");
-        ${returnType === 'void' ? 'function();' : 'return Napi::Value::From(env, function());'}
-    }
-    catch(const std::exception& e){
-        Napi::TypeError::New(env, e.what()).ThrowAsJavaScriptException();
-    }
-}`
-    }).join('\n\n');
-
-    const tsFunctionDefinitions = testLibraryData.functions.map(value => {
-        const returnType = toTsType(value.returnType);
-        const functionName = toCamelCase(value.name);
-        return `    public ${functionName}(): ${returnType} {
-        return this.library.${value.name}();
-    }`
-    }).join('\n\n');
+    const functionDeclarations = testLibraryData.functions.map(CPlusPlus.makeFunctionDeclaration).join('\n');
+    const functionEnumeration = testLibraryData.functions.map(CPlusPlus.makeFunctionEnumeration).join(',\n');
+    const functionDefinitions = testLibraryData.functions.map(CPlusPlus.makeFunctionDefinition).join('\n\n');
+    const tsFunctionDefinitions = testLibraryData.functions.map(TS.makeFunctionDefinition).join('\n\n');
 
     const gypFilename = path.join('output', 'binding.gyp');
     const cmakeFilename = path.join('output', 'CMakeLists.txt');
