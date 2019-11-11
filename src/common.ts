@@ -3,8 +3,8 @@ import {assertUnreachable} from "./utils";
 export interface IStructure {
 }
 
-type NativeTypeT = 'pointer' | 'void' | 'int8' | 'int16' | 'int32' | 'int64' | 'float32' | 'float64' // TODO extend
-type CppTypeT =
+export type NativeTypeT = 'pointer' | 'void' | 'int8' | 'int16' | 'int32' | 'int64' | 'float32' | 'float64' // TODO extend
+export type CppTypeT =
     'std::int8_t'
     | 'std::int16_t'
     | 'std::int32_t'

@@ -11,15 +11,21 @@ import {saveWithoutOverride} from "./utils";
 
 const testLibraryData: ILibraryData = {
     structures: [],
-    functions: [{
-        name: 'hello',
-        returnType: 'void',
-        arguments: []
-    },
+    functions: [
+        {
+            name: 'hello',
+            returnType: 'void',
+            arguments: []
+        },
         {
             name: 'get_five',
             returnType: 'int32',
             arguments: []
+        },
+        {
+            name: 'duplicate',
+            returnType: 'int32',
+            arguments: ["int32"]
         }
     ]
 };
