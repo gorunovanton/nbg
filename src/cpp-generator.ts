@@ -37,14 +37,14 @@ export namespace CPlusPlus {
         const returnType = func.returnType === 'void' ? 'void' : 'Napi::Value';
 
         const argsParsing = func.arguments.map((value, index) => {
-            return `const auto arg${index} = args[${index}]${formatNapiGetter(value)};`
+            return `const auto arg${index} = args[${index}]${formatNapiGetter(value.type)};`
         }).join('\n\n');
 
         const argNames = func.arguments.map((_, index) => {
             return `arg${index}`;
         }).join(', ');
 
-        const argTypes = func.arguments.map(value => toCppType(value)).join(', ');
+        const argTypes = func.arguments.map(value => toCppType(value.type)).join(', ');
 
         return `${returnType} Library::${func.name}(const Napi::CallbackInfo& args){
     const auto env = args.Env();

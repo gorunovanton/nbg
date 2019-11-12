@@ -25,7 +25,10 @@ const testLibraryData: ILibraryData = {
         {
             name: 'duplicate',
             returnType: 'int32',
-            arguments: ["int32"]
+            arguments: [{
+                name: 'original',
+                type: 'int32'
+            }]
         }
     ]
 };

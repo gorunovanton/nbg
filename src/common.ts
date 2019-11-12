@@ -18,9 +18,14 @@ export type CppTypeT =
     | 'void'
     | 'void*'
 
+export interface IFunctionArgument {
+    name: string
+    type: NativeTypeT
+}
+
 export interface IFunction {
     name: string
-    arguments: NativeTypeT[]
+    arguments: IFunctionArgument[]
     returnType: NativeTypeT
 }
 
