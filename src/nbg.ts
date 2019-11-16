@@ -10,7 +10,19 @@ import {TS} from "./ts-generator";
 import {saveWithoutOverride} from "./utils";
 
 const testLibraryData: ILibraryData = {
-    structures: [],
+    structures: [{
+        name: 'factors_s',
+        members: [
+            {
+                name: 'base',
+                type: 'int32'
+            },
+            {
+                name: 'multiplier',
+                type: 'int32'
+            }
+        ]
+    }],
     functions: [
         {
             name: 'hello',
@@ -42,6 +54,10 @@ export async function generateLibrary() {
     const functionDefinitions = testLibraryData.functions.map(CPlusPlus.makeFunctionDefinition).join('\n\n');
     const tsFunctionDefinitions = testLibraryData.functions.map(TS.makeFunctionDefinition).join('\n\n');
 
+    const structuresDeclarations = testLibraryData.structures.map(CPlusPlus.makeStructureDeclaration).join('\n');
+    const structureDefinitions = testLibraryData.structures.map(CPlusPlus.makeStructureDefinition).join('\n');
+    const structureInitializationCalls = testLibraryData.structures.map(CPlusPlus.makeStructureWrapperInitializer).join('\n');
+
     const gypFilename = path.join('output', 'binding.gyp');
     const cmakeFilename = path.join('output', 'CMakeLists.txt');
     const conanFilename = path.join('output', 'conanfile.txt');
@@ -49,6 +65,9 @@ export async function generateLibrary() {
 
     const addonTemplate = (await fs.readFile('src/templates/addon.cpp')).toString();
     const addonCode = addonTemplate
+        .replace(/\/\/NBG_STRUCTURE_WRAPPERS_INIT/g, structureInitializationCalls)
+        .replace(/\/\/NBG_STRUCTURES_DECLARATIONS/g, structuresDeclarations)
+        .replace(/\/\/NBG_STRUCTURE_DEFINITIONS/g, structureDefinitions)
         .replace(/\/\/NBG_FUNCTION_DECLARATIONS/g, functionDeclarations)
         .replace(/\/\/NBG_FUNCTION_ENUMERATION/g, functionEnumeration)
         .replace(/\/\/NBG_FUNCTION_DEFINITIONS/g, functionDefinitions);

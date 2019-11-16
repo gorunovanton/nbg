@@ -6,6 +6,9 @@
 #include <boost/dll/import.hpp>         // for dll::import
 #include <boost/dll/shared_library.hpp> // for dll::shared_library
 
+//NBG_STRUCTURES_DECLARATIONS
+//NBG_STRUCTURE_DEFINITIONS
+
 class Library : public Napi::ObjectWrap<Library> {
 public:
   static void Init(Napi::Env env, Napi::Object exports);
@@ -49,10 +52,9 @@ Library::Library(const Napi::CallbackInfo &info)
 void Library::Init(const Napi::Env env, Napi::Object exports) {
   const Napi::HandleScope scope(env);
 
-  const auto func = DefineClass(env, "Library",
-                                {
-                                    //NBG_FUNCTION_ENUMERATION
-                                });
+  const auto func = DefineClass(env, "Library", {
+//NBG_FUNCTION_ENUMERATION
+  });
 
   constructor = Napi::Persistent(func);
   constructor.SuppressDestruct();
@@ -63,6 +65,9 @@ void Library::Init(const Napi::Env env, Napi::Object exports) {
 
 Napi::Object Init(const Napi::Env env, const Napi::Object exports) {
   Library::Init(env, exports);
+
+  //NBG_STRUCTURE_WRAPPERS_INIT
+
   return exports;
 }
 

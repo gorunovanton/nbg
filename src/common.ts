@@ -1,22 +1,16 @@
 import {assertUnreachable} from "./utils";
 
+export interface IStructureMember {
+    name: string
+    type: NativeTypeT
+}
+
 export interface IStructure {
+    name: string
+    members: IStructureMember[]
 }
 
 export type NativeTypeT = 'pointer' | 'void' | 'int8' | 'int16' | 'int32' | 'int64' | 'float32' | 'float64' // TODO extend
-export type CppTypeT =
-    'std::int8_t'
-    | 'std::int16_t'
-    | 'std::int32_t'
-    | 'std::int64_t'
-    | 'std:uint8_t'
-    | 'std::uint16_t'
-    | 'std::uint32_t'
-    | 'std::uint64_t'
-    | 'float'
-    | 'double'
-    | 'void'
-    | 'void*'
 
 export interface IFunctionArgument {
     name: string
@@ -47,29 +41,6 @@ export function toTsType(nativeType: NativeTypeT) {
         case "float32":
         case "float64":
             return 'number';
-    }
-
-    assertUnreachable(nativeType);
-}
-
-export function toCppType(nativeType: NativeTypeT): CppTypeT {
-    switch (nativeType) {
-        case "pointer":
-            return 'void*';
-        case "void":
-            return 'void';
-        case "int8":
-            return 'std::int8_t';
-        case "int16":
-            return 'std::int16_t';
-        case "int32":
-            return 'std::int32_t';
-        case "int64":
-            return 'std::int64_t';
-        case "float32":
-            return 'float';
-        case "float64":
-            return 'double';
     }
 
     assertUnreachable(nativeType);

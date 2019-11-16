@@ -1,7 +1,48 @@
-import {IFunction, NativeTypeT, toCppType} from "./common";
+import {IFunction, IStructure, NativeTypeT} from "./common";
 import {assertUnreachable} from "./utils";
 
 export namespace CPlusPlus {
+    type CppTypeT =
+        'std::int8_t'
+        | 'std::int16_t'
+        | 'std::int32_t'
+        | 'std::int64_t'
+        | 'std:uint8_t'
+        | 'std::uint16_t'
+        | 'std::uint32_t'
+        | 'std::uint64_t'
+        | 'float'
+        | 'double'
+        | 'void'
+        | 'void*'
+
+    function toCppType(nativeType: NativeTypeT): CppTypeT {
+        switch (nativeType) {
+            case "pointer":
+                return 'void*';
+            case "void":
+                return 'void';
+            case "int8":
+                return 'std::int8_t';
+            case "int16":
+                return 'std::int16_t';
+            case "int32":
+                return 'std::int32_t';
+            case "int64":
+                return 'std::int64_t';
+            case "float32":
+                return 'float';
+            case "float64":
+                return 'double';
+        }
+
+        assertUnreachable(nativeType);
+    }
+
+    function getStructureWrapperName(structure: IStructure) {
+        return `${structure.name}_wrapper`
+    }
+
     function formatNapiGetter(nativeType: NativeTypeT) {
         switch (nativeType) {
             case "pointer":
@@ -61,5 +102,47 @@ export namespace CPlusPlus {
         throw Napi::TypeError::New(env, e.what());
     }
 }`
+    }
+
+    export function makeStructureDeclaration(structure: IStructure) {
+        const name = getStructureWrapperName(structure);
+        return `
+struct ${structure.name} {
+${structure.members.map(value => `    ${toCppType(value.type)} ${value.name};`).join('\n')}
+};
+
+class ${name} : public Napi::ObjectWrap<${name}> {
+public:
+    static void Init(Napi::Env env, Napi::Object exports);
+    ${name}(const Napi::CallbackInfo& info);
+private:
+    static Napi::FunctionReference constructor;
+}; // class ${name}
+`
+    }
+
+    export function makeStructureDefinition(structure: IStructure) {
+        const name = getStructureWrapperName(structure);
+        return `Napi::FunctionReference ${name}::constructor;
+
+void ${name}::Init(const Napi::Env env, Napi::Object exports) {
+    const Napi::HandleScope scope(env);
+    const auto definition = DefineClass(env, "${name}", {
+    });
+
+    constructor = Napi::Persistent(definition);
+    constructor.SuppressDestruct();
+
+    exports.Set("${name}", definition);
+}
+
+${name}::${name}(const Napi::CallbackInfo& info) : ObjectWrap<${name}>(info) {
+    const auto env = info.Env();
+    Napi::HandleScope scope(env);
+}`
+    }
+
+    export function makeStructureWrapperInitializer(structure: IStructure) {
+        return `${getStructureWrapperName(structure)}::Init(env, exports);`;
     }
 }
