@@ -3,17 +3,19 @@ import * as path from 'path'
 interface ILibrary {
     new(libraryPath: string): any
 
-    hello(): void
-
-    getFive(): number
+//NBG_TS_FUNCTION_DECLARATIONS
 }
+
+//NBG_LIBRARY_STRUCTURES_DEFINITIONS
 
 interface IAddon {
     Library: ILibrary
+
+//NBG_LIBRARY_STRUCTURES_DECLARATIONS
 }
 
 export class Library {
-    private readonly addon: IAddon;
+    public readonly addon: IAddon;
     private readonly library: any;
 
     constructor(libraryPath: string) {

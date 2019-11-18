@@ -53,10 +53,13 @@ export async function generateLibrary() {
     const functionEnumeration = testLibraryData.functions.map(CPlusPlus.makeFunctionEnumeration).join(',\n');
     const functionDefinitions = testLibraryData.functions.map(CPlusPlus.makeFunctionDefinition).join('\n\n');
     const tsFunctionDefinitions = testLibraryData.functions.map(TS.makeFunctionDefinition).join('\n\n');
+    const tsFunctionDeclarations = testLibraryData.functions.map(TS.makeFunctionDeclaration).join('\n\n');
 
     const structuresDeclarations = testLibraryData.structures.map(CPlusPlus.makeStructureDeclaration).join('\n');
     const structureDefinitions = testLibraryData.structures.map(CPlusPlus.makeStructureDefinition).join('\n');
     const structureInitializationCalls = testLibraryData.structures.map(CPlusPlus.makeStructureWrapperInitializer).join('\n');
+    const tsStructuresDefinitions = testLibraryData.structures.map(TS.makeStructureDefinition).join('\n\n');
+    const tsStructuresDeclarations =  testLibraryData.structures.map(TS.makeStructureDeclaration).join('\n');
 
     const gypFilename = path.join('output', 'binding.gyp');
     const cmakeFilename = path.join('output', 'CMakeLists.txt');
@@ -74,7 +77,10 @@ export async function generateLibrary() {
 
     const tsLibraryTemplate = (await fs.readFile('src/templates/library.ts')).toString();
     const tsLibraryCode = tsLibraryTemplate
-        .replace(/\/\/NBG_LIBRARY_FUNCTIONS/g, tsFunctionDefinitions);
+        .replace(/\/\/NBG_TS_FUNCTION_DECLARATIONS/g, tsFunctionDeclarations)
+        .replace(/\/\/NBG_LIBRARY_FUNCTIONS/g, tsFunctionDefinitions)
+        .replace(/\/\/NBG_LIBRARY_STRUCTURES_DEFINITIONS/g, tsStructuresDefinitions)
+        .replace(/\/\/NBG_LIBRARY_STRUCTURES_DECLARATIONS/g, tsStructuresDeclarations);
 
     await saveWithoutOverride(tsFilename, tsLibraryCode);
     await saveWithoutOverride(libraryFilename, addonCode);

@@ -45,3 +45,7 @@ export function toTsType(nativeType: NativeTypeT) {
 
     assertUnreachable(nativeType);
 }
+
+export function getStructureWrapperName(structure: IStructure) {
+    return `${structure.name}_wrapper`
+}

@@ -5,7 +5,8 @@ function main() {
     console.log('Finished');
     console.log('lib.hello()', lib.hello());
     console.log('lib.getFive()', lib.getFive());
-    console.log('lib.duplicate()', lib.duplicate(5))
+    console.log('lib.duplicate()', lib.duplicate(5));
+    console.log('lib.addon.factors_s_wrapper: ', lib.addon.factors_s_wrapper)
 }
 
 main();

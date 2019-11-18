@@ -1,4 +1,4 @@
-import {IFunction, IStructure, NativeTypeT} from "./common";
+import {getStructureWrapperName, IFunction, IStructure, NativeTypeT} from "./common";
 import {assertUnreachable} from "./utils";
 
 export namespace CPlusPlus {
@@ -37,10 +37,6 @@ export namespace CPlusPlus {
         }
 
         assertUnreachable(nativeType);
-    }
-
-    function getStructureWrapperName(structure: IStructure) {
-        return `${structure.name}_wrapper`
     }
 
     function formatNapiGetter(nativeType: NativeTypeT) {
