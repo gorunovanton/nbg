@@ -24,7 +24,12 @@ export namespace TS {
             return `    ${value.name}: ${toTsType(value.type)}`;
         }).join('\n');
 
+        const constructorArguments = struct.members.map(value => {
+            return `${value.name}: ${toTsType(value.type)}`;
+        }).join(', ');
+
         return `export interface I${getStructureWrapperName(struct)} {
+    new(data?: {${constructorArguments}}): I${getStructureWrapperName(struct)}
 ${members}
 }`
     }

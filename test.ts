@@ -6,7 +6,11 @@ function main() {
     console.log('lib.hello()', lib.hello());
     console.log('lib.getFive()', lib.getFive());
     console.log('lib.duplicate()', lib.duplicate(5));
-    console.log('lib.addon.factors_s_wrapper: ', lib.addon.factors_s_wrapper)
+    console.log('lib.addon.factors_s_wrapper: ', lib.addon.factors_s_wrapper);
+
+    const factors = new lib.addon.factors_s_wrapper({base: 2, multiplier: 3});
+    console.log('factors', factors);
+    console.log('factors.base', factors.base)
 }
 
 main();

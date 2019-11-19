@@ -113,6 +113,9 @@ public:
     ${name}(const Napi::CallbackInfo& info);
 private:
     static Napi::FunctionReference constructor;
+    
+    ${structure.name}* m_ptr = nullptr;
+    std::unique_ptr<${structure.name}> m_data;
 }; // class ${name}
 `
     }
