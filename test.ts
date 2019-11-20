@@ -10,7 +10,10 @@ function main() {
 
     const factors = new lib.addon.factors_s_wrapper({base: 2, multiplier: 3});
     console.log('factors', factors);
-    console.log('factors.base', factors.base)
+    console.log('factors.base', factors.base);
+    factors.base = 11;
+    console.log('factors.base', factors.base);
+
 }
 
 main();

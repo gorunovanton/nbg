@@ -1,5 +1,5 @@
 import {getStructureWrapperName, IFunction, IStructure, NativeTypeT} from "./common";
-import {assertUnreachable} from "./utils";
+import {assertUnreachable, capitalizeFirstLetter, toCamelCase} from "./utils";
 
 export namespace CPlusPlus {
     type CppTypeT =
@@ -102,6 +102,17 @@ export namespace CPlusPlus {
 
     export function makeStructureDeclaration(structure: IStructure) {
         const name = getStructureWrapperName(structure);
+
+        const getters = structure.members.map(value => {
+            const getterName = `Get${capitalizeFirstLetter(toCamelCase(value.name))}`;
+            return `Napi::Value ${getterName}(const Napi::CallbackInfo &info);\n`
+        }).join('\n');
+
+        const setters = structure.members.map(value => {
+            const setterName = `Set${capitalizeFirstLetter(toCamelCase(value.name))}`;
+            return `void ${name}::${setterName}(const Napi::CallbackInfo &info, const Napi::Value &value);\n`
+        }).join('\n');
+
         return `
 struct ${structure.name} {
 ${structure.members.map(value => `    ${toCppType(value.type)} ${value.name};`).join('\n')}
@@ -111,6 +122,10 @@ class ${name} : public Napi::ObjectWrap<${name}> {
 public:
     static void Init(Napi::Env env, Napi::Object exports);
     ${name}(const Napi::CallbackInfo& info);
+    
+    ${getters}
+    
+    ${setters}
 private:
     static Napi::FunctionReference constructor;
     
@@ -122,11 +137,38 @@ private:
 
     export function makeStructureDefinition(structure: IStructure) {
         const name = getStructureWrapperName(structure);
+
+        const getters = structure.members.map(value => {
+            const getterName = `Get${capitalizeFirstLetter(toCamelCase(value.name))}`;
+            return `` +
+                `Napi::Value ${name}::${getterName}(const Napi::CallbackInfo &info) {\n` +
+                `   Napi::Env env = info.Env();\n` +
+                `   return Napi::Value::From(env, m_ptr->${value.name});\n` +
+                `}`
+        }).join('\n\n');
+
+
+        const setters = structure.members.map(value => {
+            const setterName = `Set${capitalizeFirstLetter(toCamelCase(value.name))}`;
+            return `` +
+                `void ${name}::${setterName}(const Napi::CallbackInfo &info, const Napi::Value &value) {\n` +
+                `   Napi::Env env = info.Env();\n` +
+                `   m_ptr->${value.name} = value${formatNapiGetter(value.type)};\n` +
+                `}`
+        }).join('\n\n');
+
+        const accessors = structure.members.map(value => {
+            const setterName = `Set${capitalizeFirstLetter(toCamelCase(value.name))}`;
+            const getterName = `Get${capitalizeFirstLetter(toCamelCase(value.name))}`;
+            return `        InstanceAccessor("${value.name}", &${name}::${getterName}, &${name}::${setterName})`;
+        }).join(',\n');
+
         return `Napi::FunctionReference ${name}::constructor;
 
 void ${name}::Init(const Napi::Env env, Napi::Object exports) {
     const Napi::HandleScope scope(env);
     const auto definition = DefineClass(env, "${name}", {
+    ${accessors}
     });
 
     constructor = Napi::Persistent(definition);
@@ -138,7 +180,15 @@ void ${name}::Init(const Napi::Env env, Napi::Object exports) {
 ${name}::${name}(const Napi::CallbackInfo& info) : ObjectWrap<${name}>(info) {
     const auto env = info.Env();
     Napi::HandleScope scope(env);
-}`
+    
+    m_data = std::make_unique<${structure.name}>();
+    m_ptr = m_data.get();
+}
+
+${getters}
+
+${setters}
+`
     }
 
     export function makeStructureWrapperInitializer(structure: IStructure) {
