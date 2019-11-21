@@ -1,49 +1,13 @@
-import * as fs from 'fs-extra'
-import * as path from 'path'
+import * as fs from 'fs-extra';
+import * as path from 'path';
 
 import * as gyp from "./templates/gyp";
 import * as cmake from "./templates/cmake";
 import * as conan from "./templates/conan";
-import {ILibraryData} from "./common";
 import {CPlusPlus} from "./cpp-generator";
 import {TS} from "./ts-generator";
 import {saveWithoutOverride} from "./utils";
-
-const testLibraryData: ILibraryData = {
-    structures: [{
-        name: 'factors_s',
-        members: [
-            {
-                name: 'base',
-                type: 'int32'
-            },
-            {
-                name: 'multiplier',
-                type: 'int32'
-            }
-        ]
-    }],
-    functions: [
-        {
-            name: 'hello',
-            returnType: 'void',
-            arguments: []
-        },
-        {
-            name: 'get_five',
-            returnType: 'int32',
-            arguments: []
-        },
-        {
-            name: 'duplicate',
-            returnType: 'int32',
-            arguments: [{
-                name: 'original',
-                type: 'int32'
-            }]
-        }
-    ]
-};
+import {testLibraryData} from './test-data';
 
 export async function generateLibrary() {
     const libraryFilename = path.join('output', 'binding.cpp');
@@ -59,7 +23,7 @@ export async function generateLibrary() {
     const structureDefinitions = testLibraryData.structures.map(CPlusPlus.makeStructureDefinition).join('\n');
     const structureInitializationCalls = testLibraryData.structures.map(CPlusPlus.makeStructureWrapperInitializer).join('\n');
     const tsStructuresDefinitions = testLibraryData.structures.map(TS.makeStructureDefinition).join('\n\n');
-    const tsStructuresDeclarations =  testLibraryData.structures.map(TS.makeStructureDeclaration).join('\n');
+    const tsStructuresDeclarations = testLibraryData.structures.map(TS.makeStructureDeclaration).join('\n');
 
     const gypFilename = path.join('output', 'binding.gyp');
     const cmakeFilename = path.join('output', 'CMakeLists.txt');
