@@ -29,7 +29,9 @@ export namespace TS {
         }).join(', ');
 
         return `export interface I${getStructureWrapperName(struct)} {
-    new(data?: {${constructorArguments}}): I${getStructureWrapperName(struct)}
+    new(data?: {${constructorArguments}} | Buffer): I${getStructureWrapperName(struct)}
+    getSize(): number
+    
 ${members}
 }`
     }

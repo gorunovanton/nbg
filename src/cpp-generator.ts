@@ -105,12 +105,12 @@ export namespace CPlusPlus {
 
         const getters = structure.members.map(value => {
             const getterName = `Get${capitalizeFirstLetter(toCamelCase(value.name))}`;
-            return `Napi::Value ${getterName}(const Napi::CallbackInfo &info);\n`
+            return `    Napi::Value ${getterName}(const Napi::CallbackInfo &info);`
         }).join('\n');
 
         const setters = structure.members.map(value => {
             const setterName = `Set${capitalizeFirstLetter(toCamelCase(value.name))}`;
-            return `void ${name}::${setterName}(const Napi::CallbackInfo &info, const Napi::Value &value);\n`
+            return `    void ${name}::${setterName}(const Napi::CallbackInfo &info, const Napi::Value &value);`
         }).join('\n');
 
         return `
@@ -123,11 +123,11 @@ public:
     static void Init(Napi::Env env, Napi::Object exports);
     ${name}(const Napi::CallbackInfo& info);
     
-    ${getters}
-    
-    ${setters}
+${getters}
+${setters}
 private:
     static Napi::FunctionReference constructor;
+    static Napi::Value getSize(const Napi::CallbackInfo& info);
     
     ${structure.name}* m_ptr = nullptr;
     std::unique_ptr<${structure.name}> m_data;
@@ -163,12 +163,17 @@ private:
             return `        InstanceAccessor("${value.name}", &${name}::${getterName}, &${name}::${setterName})`;
         }).join(',\n');
 
+        const fromObjectInitialization = structure.members.map(value => {
+            return `        m_ptr->${value.name} = object.Get("${value.name}")${formatNapiGetter(value.type)};`
+        }).join('\n');
+
         return `Napi::FunctionReference ${name}::constructor;
 
 void ${name}::Init(const Napi::Env env, Napi::Object exports) {
     const Napi::HandleScope scope(env);
     const auto definition = DefineClass(env, "${name}", {
-    ${accessors}
+        StaticMethod("getSize", getSize), 
+${accessors}
     });
 
     constructor = Napi::Persistent(definition);
@@ -177,12 +182,56 @@ void ${name}::Init(const Napi::Env env, Napi::Object exports) {
     exports.Set("${name}", definition);
 }
 
+Napi::Value ${name}::getSize(const Napi::CallbackInfo& info) {
+    const auto env = info.Env();
+    return Napi::Value::From(env, sizeof(${structure.name}));
+}
+
 ${name}::${name}(const Napi::CallbackInfo& info) : ObjectWrap<${name}>(info) {
     const auto env = info.Env();
     Napi::HandleScope scope(env);
     
-    m_data = std::make_unique<${structure.name}>();
-    m_ptr = m_data.get();
+    if (info.Length() == 0) {
+        m_data = std::make_unique<${structure.name}>();
+        m_ptr = m_data.get();
+        return;
+    }
+    
+    if (info.Length() != 1) {
+        throw Napi::Error::New(env, "${name}.constructor accepts 0 or 1 arguments, but " + std::to_string(info.Length()) + " is given");
+    }
+    
+    if (info[0].IsExternal()) {
+        //TODO implement
+        throw Napi::TypeError::New(env, "Not implemented");
+        return;
+    }
+        
+    if (info[0].IsBuffer()) {
+        //TODO hold reference to object to prevent its garbage collection
+        
+        const auto buffer = info[0].As<Napi::Buffer<std::uint8_t>>();
+        if (buffer.Length() < sizeof(${structure.name})) {
+            throw Napi::TypeError::New(env, "Bad buffer length: Buffer length is " +
+                std::to_string(buffer.Length()) + ", sizeof(${structure.name})=" +
+                std::to_string(sizeof(${structure.name})));
+        }
+        
+        m_ptr = static_cast<${structure.name}*>(static_cast<void*>(buffer.Data()));
+        return;
+    }
+    
+    if (info[0].IsObject()) {
+        m_data = std::make_unique<${structure.name}>();
+        m_ptr = m_data.get();
+        const auto object = info[0].As<Napi::Object>();
+        
+${fromObjectInitialization}
+
+        return;
+    }
+    
+    throw Napi::Error::New(env, "Invalid arguments given for ${name}.constructor");
 }
 
 ${getters}
