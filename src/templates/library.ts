@@ -1,12 +1,12 @@
 import * as path from 'path'
 
+//NBG_LIBRARY_STRUCTURES_DEFINITIONS
+
 interface ILibrary {
-    new(libraryPath: string): any
+    new(libraryPath: string): ILibrary
 
 //NBG_TS_FUNCTION_DECLARATIONS
 }
-
-//NBG_LIBRARY_STRUCTURES_DEFINITIONS
 
 interface IAddon {
     Library: ILibrary

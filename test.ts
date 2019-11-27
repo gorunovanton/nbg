@@ -33,6 +33,11 @@ function main() {
         factors.base = 11;
         console.log('factors.base', factors.base);
     }
+
+    {
+        const factors = new lib.addon.factors_s_wrapper({base: 2, multiplier: 3});
+        console.log('lib.multiply(factors)', lib.multiply(factors));
+    }
 }
 
 main();

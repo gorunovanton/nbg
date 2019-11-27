@@ -1,51 +1,45 @@
-import {assertUnreachable} from "./utils";
+export type NativeTrivialTypeT = 'void' | 'int8' | 'int16' | 'int32' | 'int64' | 'float32' | 'float64'
+export type NativeTypeT = 'pointer' | 'structure' | NativeTrivialTypeT
 
-export interface IStructureMember {
-    name: string
+interface IBaseTypeDescriptor {
     type: NativeTypeT
+}
+
+export interface ITrivialTypeDescriptor extends IBaseTypeDescriptor {
+    type: NativeTrivialTypeT
+}
+
+export interface IStructureTypeDescriptor extends IBaseTypeDescriptor {
+    type: 'structure'
+    structureName: string
+}
+
+export interface IPointerTypeDescriptor extends IBaseTypeDescriptor {
+    type: 'pointer'
+}
+
+export type ITypeDescriptor = ITrivialTypeDescriptor | IStructureTypeDescriptor | IPointerTypeDescriptor
+
+export interface INamedParameter {
+    name: string
 }
 
 export interface IStructure {
     name: string
-    members: IStructureMember[]
-}
-
-export type NativeTypeT = 'pointer' | 'void' | 'int8' | 'int16' | 'int32' | 'int64' | 'float32' | 'float64' // TODO extend
-
-export interface IFunctionArgument {
-    name: string
-    type: NativeTypeT
+    members: Array<ITypeDescriptor & INamedParameter>
 }
 
 export interface IFunction {
     name: string
-    arguments: IFunctionArgument[]
-    returnType: NativeTypeT
+    arguments: Array<ITypeDescriptor & INamedParameter>
+    returnType: ITypeDescriptor
 }
 
 export interface ILibraryData {
-    structures: IStructure[]
-    functions: IFunction[]
+    structures: Array<IStructure>
+    functions: Array<IFunction>
 }
 
-export function toTsType(nativeType: NativeTypeT) {
-    switch (nativeType) {
-        case "pointer":
-            throw new Error('Not yet implemented');
-        case "void":
-            return 'void';
-        case "int8":
-        case "int16":
-        case "int32":
-        case "int64":
-        case "float32":
-        case "float64":
-            return 'number';
-    }
-
-    assertUnreachable(nativeType);
-}
-
-export function getStructureWrapperName(structure: IStructure) {
-    return `${structure.name}_wrapper`
+export function getStructureWrapperName(structureName: string) {
+    return `${structureName}_wrapper`
 }

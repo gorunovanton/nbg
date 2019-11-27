@@ -1,4 +1,10 @@
-import {getStructureWrapperName, IFunction, IStructure, NativeTypeT} from "./common";
+import {
+    getStructureWrapperName,
+    IFunction,
+    ITypeDescriptor,
+    IStructure,
+    NativeTypeT
+} from "./common";
 import {assertUnreachable, capitalizeFirstLetter, toCamelCase} from "./utils";
 
 export namespace CPlusPlus {
@@ -15,9 +21,13 @@ export namespace CPlusPlus {
         | 'double'
         | 'void'
         | 'void*'
+        | 'struct'
 
-    function toCppType(nativeType: NativeTypeT): CppTypeT {
+    function toCppType(typeDescriptor: ITypeDescriptor): CppTypeT {
+        const nativeType = typeDescriptor.type;
         switch (nativeType) {
+            case "structure":
+                throw Error('Not implemented');
             case "pointer":
                 return 'void*';
             case "void":
@@ -39,8 +49,38 @@ export namespace CPlusPlus {
         assertUnreachable(nativeType);
     }
 
+    function makeCppType(argData: ITypeDescriptor): CppTypeT | string {
+        switch (argData.type) {
+            case 'structure':
+                return argData.structureName;
+            case 'pointer':
+                return 'void*';
+            case 'void':
+                return 'void';
+            case 'int8':
+                return 'std::int8_t';
+            case 'int16':
+                return 'std::int16_t';
+            case 'int32':
+                return 'std::int32_t';
+            case 'int64':
+                return 'std::int64_t';
+            case 'float32':
+                return 'float';
+            case 'float64':
+                return 'double';
+        }
+        // TODO fix assertion
+        // assertUnreachable(argData.type);
+
+        throw Error('Logic error. Unknown type.')
+    }
+
+
     function formatNapiGetter(nativeType: NativeTypeT) {
         switch (nativeType) {
+            case "structure":
+                throw new Error('Not yet implemented');
             case "pointer":
                 throw new Error('Not yet implemented');
             case "void":
@@ -61,8 +101,17 @@ export namespace CPlusPlus {
         assertUnreachable(nativeType);
     }
 
+    function makeArgumentReader(argument: ITypeDescriptor, index: number) {
+        if (argument.type === "structure") {
+            const structureWrappedName = getStructureWrapperName(argument.structureName);
+            return `auto& arg${index} = (Napi::ObjectWrap<${structureWrappedName}>::Unwrap(args[${index}].As<Napi::Object>()))->nbgGetData();`
+        }
+
+        return `const auto arg${index} = args[${index}]${formatNapiGetter(argument.type)};`
+    }
+
     export function makeFunctionDeclaration(func: IFunction) {
-        const returnType = func.returnType === 'void' ? 'void' : 'Napi::Value';
+        const returnType = func.returnType.type === 'void' ? 'void' : 'Napi::Value';
         return `${returnType} ${func.name}(const Napi::CallbackInfo& args);`
     }
 
@@ -71,17 +120,15 @@ export namespace CPlusPlus {
     }
 
     export function makeFunctionDefinition(func: IFunction) {
-        const returnType = func.returnType === 'void' ? 'void' : 'Napi::Value';
+        const returnType = func.returnType.type === 'void' ? 'void' : 'Napi::Value';
 
-        const argsParsing = func.arguments.map((value, index) => {
-            return `const auto arg${index} = args[${index}]${formatNapiGetter(value.type)};`
-        }).join('\n\n');
+        const argsParsing = func.arguments.map(makeArgumentReader).join('\n\n');
 
         const argNames = func.arguments.map((_, index) => {
             return `arg${index}`;
         }).join(', ');
 
-        const argTypes = func.arguments.map(value => toCppType(value.type)).join(', ');
+        const argTypes = func.arguments.map(value => makeCppType(value)).join(', ');
 
         return `${returnType} Library::${func.name}(const Napi::CallbackInfo& args){
     const auto env = args.Env();
@@ -101,7 +148,7 @@ export namespace CPlusPlus {
     }
 
     export function makeStructureDeclaration(structure: IStructure) {
-        const name = getStructureWrapperName(structure);
+        const name = getStructureWrapperName(structure.name);
 
         const getters = structure.members.map(value => {
             const getterName = `Get${capitalizeFirstLetter(toCamelCase(value.name))}`;
@@ -115,7 +162,7 @@ export namespace CPlusPlus {
 
         return `
 struct ${structure.name} {
-${structure.members.map(value => `    ${toCppType(value.type)} ${value.name};`).join('\n')}
+${structure.members.map(value => `    ${toCppType(value)} ${value.name};`).join('\n')}
 };
 
 class ${name} : public Napi::ObjectWrap<${name}> {
@@ -125,6 +172,15 @@ public:
     
 ${getters}
 ${setters}
+
+    auto& nbgGetData() {
+        return *m_ptr;
+    }
+    
+    const auto& nbgGetData() const {
+        return *m_ptr;
+    }
+    
 private:
     static Napi::FunctionReference constructor;
     static Napi::Value getSize(const Napi::CallbackInfo& info);
@@ -136,7 +192,7 @@ private:
     }
 
     export function makeStructureDefinition(structure: IStructure) {
-        const name = getStructureWrapperName(structure);
+        const name = getStructureWrapperName(structure.name);
 
         const getters = structure.members.map(value => {
             const getterName = `Get${capitalizeFirstLetter(toCamelCase(value.name))}`;
@@ -241,6 +297,6 @@ ${setters}
     }
 
     export function makeStructureWrapperInitializer(structure: IStructure) {
-        return `${getStructureWrapperName(structure)}::Init(env, exports);`;
+        return `${getStructureWrapperName(structure.name)}::Init(env, exports);`;
     }
 }

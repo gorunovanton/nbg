@@ -17,21 +17,31 @@ export const testLibraryData: ILibraryData = {
     functions: [
         {
             name: 'hello',
-            returnType: 'void',
+            returnType: {type: 'void'},
             arguments: []
         },
         {
             name: 'get_five',
-            returnType: 'int32',
+            returnType: {type: 'int32'},
             arguments: []
         },
         {
             name: 'duplicate',
-            returnType: 'int32',
+            returnType: {type: 'int32'},
             arguments: [{
                 name: 'original',
                 type: 'int32'
             }]
+        },
+        {
+            name: 'multiply',
+            returnType: {type: 'int32'},
+            arguments: [{
+                name: 'sources',
+                type: 'structure',
+                structureName: 'factors_s'
+            }
+            ]
         }
     ]
 };
