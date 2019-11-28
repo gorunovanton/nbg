@@ -42,6 +42,11 @@ export const testLibraryData: ILibraryData = {
                 structureName: 'factors_s'
             }
             ]
+        },
+        {
+            name: 'create_factors',
+            returnType: {type: 'structure', structureName: 'factors_s'},
+            arguments: []
         }
     ]
 };

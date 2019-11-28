@@ -38,6 +38,12 @@ function main() {
         const factors = new lib.addon.factors_s_wrapper({base: 2, multiplier: 3});
         console.log('lib.multiply(factors)', lib.multiply(factors));
     }
+
+    {
+        const factors = lib.createFactors();
+        console.log('Created factors: ', factors);
+        console.log('factors.base, factors.multiplier', factors.base, factors.multiplier);
+    }
 }
 
 main();

@@ -16,7 +16,7 @@ API_EXPORT void hello();
 API_EXPORT int get_five();
 API_EXPORT int duplicate(int original);
 API_EXPORT int multiply(factors_s sources);
-
+API_EXPORT factors_s create_factors();
 
 #ifdef __cplusplus
 }

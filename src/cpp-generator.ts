@@ -23,11 +23,10 @@ export namespace CPlusPlus {
         | 'void*'
         | 'struct'
 
-    function toCppType(typeDescriptor: ITypeDescriptor): CppTypeT {
-        const nativeType = typeDescriptor.type;
-        switch (nativeType) {
+    function toCppType(typeDescriptor: ITypeDescriptor): CppTypeT | string {
+        switch (typeDescriptor.type) {
             case "structure":
-                throw Error('Not implemented');
+                return typeDescriptor.structureName;
             case "pointer":
                 return 'void*';
             case "void":
@@ -46,7 +45,9 @@ export namespace CPlusPlus {
                 return 'double';
         }
 
-        assertUnreachable(nativeType);
+        throw Error('Logic error');
+        // TODO fix assert
+        // assertUnreachable(typeDescriptor.type);
     }
 
     function makeCppType(argData: ITypeDescriptor): CppTypeT | string {
@@ -76,6 +77,28 @@ export namespace CPlusPlus {
         throw Error('Logic error. Unknown type.')
     }
 
+
+    function makeJsValue(typeDescriptor: ITypeDescriptor, expression: string, envName: string): string {
+        switch (typeDescriptor.type) {
+            case 'structure':
+                const structureWrappedName = getStructureWrapperName(typeDescriptor.structureName);
+                return `${structureWrappedName}::FromNativeValue(${envName}, ${expression})`;
+            case 'pointer':
+                throw Error('not implemented');
+            case 'void':
+            case 'int8':
+            case 'int16':
+            case 'int32':
+            case 'int64':
+            case 'float32':
+            case 'float64':
+                return `Napi::Value::From(${envName}, ${expression})`;
+        }
+        // TODO fix assertion
+        // assertUnreachable(argData.type);
+
+        throw Error('Logic error. Unknown type.')
+    }
 
     function formatNapiGetter(nativeType: NativeTypeT) {
         switch (nativeType) {
@@ -139,7 +162,8 @@ export namespace CPlusPlus {
     ${argsParsing}
     try{
         const auto function = m_library.get<${toCppType(func.returnType)}(${argTypes})>("${func.name}");
-        ${returnType === 'void' ? 'function();' : `return Napi::Value::From(env, function(${argNames}));`}
+        ${returnType === 'void' ? 'function();' :
+            `return ${makeJsValue(func.returnType, `function(${argNames})`, 'env')};`}
     }
     catch(const std::exception& e){
         throw Napi::TypeError::New(env, e.what());
@@ -172,6 +196,12 @@ public:
     
 ${getters}
 ${setters}
+
+    static Napi::Object New(const Napi::Value arg){
+        return constructor.New({arg});
+    }
+    
+    static Napi::Object FromNativeValue(const Napi::Env env, ${structure.name} &&value);
 
     auto& nbgGetData() {
         return *m_ptr;
@@ -224,6 +254,12 @@ private:
         }).join('\n');
 
         return `Napi::FunctionReference ${name}::constructor;
+
+Napi::Object ${name}::FromNativeValue(const Napi::Env env, ${structure.name} &&value) {
+    auto buffer = Napi::Buffer<${structure.name}>::New(env, 1);
+    *(buffer.Data()) = std::move(value);
+    return ${name}::New(buffer);
+}
 
 void ${name}::Init(const Napi::Env env, Napi::Object exports) {
     const Napi::HandleScope scope(env);
