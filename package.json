@@ -8,8 +8,9 @@
     "configure": "cd output && cmake-js configure",
     "build": "cd output && conan install . && cmake-js build",
     "make": "npm run generate && npm run build",
-    "run": "ts-node test.ts",
-    "makeAndRun": "npm run make && npm run run"
+    "run": "ts-node tests/test.ts",
+    "makeAndRun": "npm run make && npm run run",
+    "test": "jest"
   },
   "dependencies": {
     "bindings": "^1.5.0",
@@ -17,7 +18,10 @@
   },
   "devDependencies": {
     "@types/fs-extra": "^8.0.1",
+    "@types/jest": "^24.0.23",
+    "jest": "^24.9.0",
     "node-addon-api": "^2.0.0",
+    "ts-jest": "^24.2.0",
     "ts-node": "^8.4.1",
     "typescript": "^3.7.2"
   }
