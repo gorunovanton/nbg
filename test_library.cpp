@@ -12,3 +12,10 @@ int multiply(const factors_s sources) {
 }
 
 factors_s create_factors() { return factors_s{6, 7}; }
+
+int *makeIntPtr() {
+  const auto ptr = new int;
+  *ptr = 11;
+  return ptr;
+}
+int dereferenceInt(const int *const value) { return *value; }

@@ -8,8 +8,13 @@ interface ILibrary {
 //NBG_TS_FUNCTION_DECLARATIONS
 }
 
+export interface IPointer {
+    new(ptr: Buffer): IPointer
+}
+
 interface IAddon {
     Library: ILibrary
+    Pointer: IPointer
 
 //NBG_LIBRARY_STRUCTURES_DECLARATIONS
 }

@@ -7,9 +7,8 @@
     "generate": "ts-node src/nbg.ts",
     "configure": "cd output && cmake-js configure",
     "build": "cd output && conan install . && cmake-js build",
-    "make": "npm run generate && npm run build",
-    "run": "ts-node tests/test.ts",
-    "makeAndRun": "npm run make && npm run run",
+    "make": "yarn generate && yarn build",
+    "makeAndRun": "yarn make && yarn jest",
     "test": "jest"
   },
   "dependencies": {

@@ -16,6 +16,8 @@ export interface IStructureTypeDescriptor extends IBaseTypeDescriptor {
 
 export interface IPointerTypeDescriptor extends IBaseTypeDescriptor {
     type: 'pointer'
+    underlyingType: ITypeDescriptor
+    mutable: boolean
 }
 
 export type ITypeDescriptor = ITrivialTypeDescriptor | IStructureTypeDescriptor | IPointerTypeDescriptor

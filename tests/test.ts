@@ -118,4 +118,30 @@ describe('Library usage', () => {
             expect(structInstance.multiplier).toEqual(multiplierValue);
         });
     });
+
+    describe('Pointers', () => {
+        test('Pointer wrapper is available', () => {
+            expect(lib.addon.Pointer).toBeDefined();
+        });
+
+        test('Create pointer from buffer', () => {
+            const pointerSize = 8; // TODO move to addon
+            const buffer = Buffer.alloc(pointerSize);
+            const ptr = new lib.addon.Pointer(buffer);
+            expect(ptr).toBeDefined();
+        });
+
+        test('Call function returning pointer', () => {
+            const ptr = lib.makeIntPtr();
+            expect(ptr).toBeDefined();
+            console.log(ptr)
+        });
+
+        test('Call function with pointer argument', () => {
+            const ptr = lib.makeIntPtr();
+            console.log(ptr);
+            expect(lib.dereferenceInt(ptr)).toEqual(11);
+            console.log(ptr);
+        });
+    });
 });

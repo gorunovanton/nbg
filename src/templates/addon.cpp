@@ -9,6 +9,28 @@
 //NBG_STRUCTURES_DECLARATIONS
 //NBG_STRUCTURE_DEFINITIONS
 
+class Pointer : public Napi::ObjectWrap<Pointer> {
+public:
+  Pointer(const Napi::CallbackInfo &info);
+  static void Init(Napi::Env env, Napi::Object exports);
+
+  static Napi::Object FromNativeValue(const Napi::Env env, void * ptr);
+
+  static Napi::Object New(const Napi::Value arg) {
+    return constructor.New({arg});
+  }
+
+  Napi::Value asBuffer() { return m_buffer; }
+
+  void *asPtr() { return reinterpret_cast<void *>(*(m_buffer.Data())); }
+
+private:
+  static Napi::FunctionReference constructor;
+
+  Napi::Buffer<std::size_t> m_buffer;
+  Napi::Reference<Napi::Buffer<std::size_t>> m_reference;
+}; // class pointer
+
 class Library : public Napi::ObjectWrap<Library> {
 public:
   static void Init(Napi::Env env, Napi::Object exports);
@@ -21,6 +43,40 @@ private:
 
   boost::dll::shared_library m_library;
 }; // class Library
+
+Napi::FunctionReference Pointer::constructor;
+
+Pointer::Pointer(const Napi::CallbackInfo &info)
+    : Napi::ObjectWrap<Pointer>(info) {
+  const auto env = info.Env();
+  if (info.Length() != 1) {
+    throw Napi::Error::New(env, "Pointer take only one argument");
+  }
+
+  if (!info[0].IsBuffer()) {
+    // TODO hold reference to object to prevent its garbage collection
+    throw Napi::TypeError::New(env, "Pointer can take only buffer as argument");
+  }
+
+  m_buffer = info[0].As<Napi::Buffer<std::size_t>>();
+  m_reference = Napi::Reference<Napi::Buffer<std::size_t>>::New(m_buffer, 1);
+}
+
+void Pointer::Init(const Napi::Env env, Napi::Object exports) {
+  const Napi::HandleScope scope(env);
+
+  const auto func = DefineClass(env, "Pointer", {});
+
+  constructor = Napi::Persistent(func);
+  constructor.SuppressDestruct();
+  exports.Set("Pointer", func);
+}
+
+Napi::Object Pointer::FromNativeValue(const Napi::Env env, void * ptr) {
+  auto buffer = Napi::Buffer<std::size_t>::New(env, 1);
+  *(buffer.Data()) = reinterpret_cast<size_t>(ptr);
+  return Pointer::New(buffer); // TODO fix this mem leak
+}
 
 Napi::FunctionReference Library::constructor;
 
@@ -65,6 +121,7 @@ void Library::Init(const Napi::Env env, Napi::Object exports) {
 
 Napi::Object Init(const Napi::Env env, const Napi::Object exports) {
   Library::Init(env, exports);
+  Pointer::Init(env, exports);
 
   //NBG_STRUCTURE_WRAPPERS_INIT
 

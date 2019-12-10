@@ -7,7 +7,7 @@ export namespace TS {
             case "structure":
                 return `I${getStructureWrapperName(typeDescription.structureName)}`;
             case "pointer":
-                throw new Error('Not yet implemented');
+                return 'IPointer';
             case "void":
                 return 'void';
             case "int8":

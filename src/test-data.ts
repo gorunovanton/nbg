@@ -47,7 +47,28 @@ export const testLibraryData: ILibraryData = {
             name: 'create_factors',
             returnType: {type: 'structure', structureName: 'factors_s'},
             arguments: []
-        }
+        },
+        {
+            name: 'makeIntPtr',
+            returnType: {
+                type: 'pointer',
+                underlyingType: {type: 'int32'},
+                mutable: true
+            },
+            arguments: []
+        },
+        {
+            name: 'dereferenceInt',
+            returnType: {type: 'int32'},
+            arguments: [{
+                name: "value",
+                type: 'pointer',
+                underlyingType: {
+                    type: 'int32'
+                },
+                mutable: false
+            }]
+        },
     ]
 };
 

@@ -84,7 +84,7 @@ export namespace CPlusPlus {
                 const structureWrappedName = getStructureWrapperName(typeDescriptor.structureName);
                 return `${structureWrappedName}::FromNativeValue(${envName}, ${expression})`;
             case 'pointer':
-                throw Error('not implemented');
+                return `Pointer::FromNativeValue(${envName}, ${expression})`;
             case 'void':
             case 'int8':
             case 'int16':
@@ -128,6 +128,10 @@ export namespace CPlusPlus {
         if (argument.type === "structure") {
             const structureWrappedName = getStructureWrapperName(argument.structureName);
             return `auto& arg${index} = (Napi::ObjectWrap<${structureWrappedName}>::Unwrap(args[${index}].As<Napi::Object>()))->nbgGetData();`
+        }
+
+        if (argument.type === "pointer") {
+            return `auto * const arg${index} = (Napi::ObjectWrap<Pointer>::Unwrap(args[${index}].As<Napi::Object>()))->asPtr();`
         }
 
         return `const auto arg${index} = args[${index}]${formatNapiGetter(argument.type)};`
