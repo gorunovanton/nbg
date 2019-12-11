@@ -88,7 +88,7 @@ Pointer::Pointer(const Napi::CallbackInfo &info)
 
   auto input_buffer = info[0].As<Napi::Buffer<std::size_t>>();
   m_buffer = Napi::Buffer<std::size_t>::New(env, 1);
-  *(m_buffer.Data()) = reinterpret_cast<size_t>(input_buffer.Data());
+  *(m_buffer.Data()) = *input_buffer.Data();
 }
 
 void Pointer::Init(const Napi::Env env, Napi::Object exports) {
