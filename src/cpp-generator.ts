@@ -55,7 +55,7 @@ export namespace CPlusPlus {
             case 'structure':
                 return argData.structureName;
             case 'pointer':
-                return 'void*';
+                return makeCppType(argData.underlyingType) + '*'; // TODO handle const-correctness
             case 'void':
                 return 'void';
             case 'int8':
@@ -131,7 +131,8 @@ export namespace CPlusPlus {
         }
 
         if (argument.type === "pointer") {
-            return `auto * const arg${index} = (Napi::ObjectWrap<Pointer>::Unwrap(args[${index}].As<Napi::Object>()))->asPtr();`
+            const cppType = makeCppType(argument);
+            return `${cppType} const arg${index} = (Napi::ObjectWrap<Pointer>::Unwrap(args[${index}].As<Napi::Object>()))->asPtr<${cppType}>();`
         }
 
         return `const auto arg${index} = args[${index}]${formatNapiGetter(argument.type)};`
@@ -159,6 +160,8 @@ export namespace CPlusPlus {
 
         return `${returnType} Library::${func.name}(const Napi::CallbackInfo& args){
     const auto env = args.Env();
+    const Napi::HandleScope scope(env);
+    
     if (args.Length() != ${func.arguments.length}) {
         throw Napi::Error::New(env, "Library.${func.name} take ${func.arguments.length} arguments, but args.Length() given");
     }

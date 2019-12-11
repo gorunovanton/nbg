@@ -5,8 +5,10 @@
   "license": "MIT",
   "scripts": {
     "generate": "ts-node src/nbg.ts",
-    "configure": "cd output && cmake-js configure",
-    "build": "cd output && conan install . && cmake-js build",
+    "configure": "cd output && conan install . && cmake-js -G \"Visual Studio 15 2017 Win64\" -a x64 configure",
+    "configureDebug": "cd output && conan install -s build_type=Debug . && cmake-js -D -G \"Visual Studio 15 2017 Win64\" -a x64 configure",
+    "build": "cd output && conan install . && cmake-js -a x64 build",
+    "buildDebug": "cd output && conan install -s build_type=Debug . && cmake-js -D -a x64 build",
     "make": "yarn generate && yarn build",
     "makeAndRun": "yarn make && yarn jest",
     "test": "jest"

@@ -3,7 +3,8 @@ import * as path from 'path'
 import * as os from 'os'
 
 const libraryExtension = os.platform() === 'win32' ? '.dll' : '.so';
-const testLibraryPath = path.join(process.cwd(), 'cmake-build-release', `test_library${libraryExtension}`);
+// const testLibraryPath = path.join(process.cwd(), 'cmake-build-release', `test_library${libraryExtension}`);
+const testLibraryPath = path.join(process.cwd(), 'cmake-build-debug', `test_library${libraryExtension}`);
 
 test('Library load', () => {
     const lib = new Library(testLibraryPath);
@@ -134,14 +135,13 @@ describe('Library usage', () => {
         test('Call function returning pointer', () => {
             const ptr = lib.makeIntPtr();
             expect(ptr).toBeDefined();
-            console.log(ptr)
         });
 
         test('Call function with pointer argument', () => {
             const ptr = lib.makeIntPtr();
-            console.log(ptr);
+            console.log(ptr.asBuffer());
             expect(lib.dereferenceInt(ptr)).toEqual(11);
-            console.log(ptr);
+            console.log(ptr)
         });
     });
 });

@@ -10,6 +10,7 @@ interface ILibrary {
 
 export interface IPointer {
     new(ptr: Buffer): IPointer
+    asBuffer(): Buffer
 }
 
 interface IAddon {
