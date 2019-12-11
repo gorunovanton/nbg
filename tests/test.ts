@@ -139,6 +139,9 @@ describe('Library usage', () => {
 
         test('Call function with pointer argument', () => {
             const ptr = lib.makeIntPtr();
+            console.log('ptr.getInt32()', ptr.getInt32());
+            expect(ptr.getInt32()).toEqual(11);
+
             console.log(ptr.asBuffer());
             expect(lib.dereferenceInt(ptr)).toEqual(11);
             console.log(ptr)

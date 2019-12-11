@@ -11,6 +11,7 @@ interface ILibrary {
 export interface IPointer {
     new(ptr: Buffer): IPointer
     asBuffer(): Buffer
+    getInt32(): number
 }
 
 interface IAddon {

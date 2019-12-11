@@ -23,6 +23,12 @@ public:
       return constructor.New({arg}).As<Napi::Object>();
   }
 
+  // TODO for debug only
+  Napi::Value getInt32(const Napi::CallbackInfo &info) {
+      const auto env = info.Env();
+      return Napi::Value::From(env, *reinterpret_cast<int*>(reinterpret_cast<void *>(*m_buffer.Data())));
+  }
+
   Napi::Value asBuffer(const Napi::CallbackInfo &info) {
     const auto env = info.Env();
 //    Napi::EscapableHandleScope scope(env);
@@ -80,6 +86,7 @@ void Pointer::Init(const Napi::Env env, Napi::Object exports) {
 
   const auto func = DefineClass(env, "Pointer", {
       InstanceMethod("asBuffer", &Pointer::asBuffer),
+      InstanceMethod("getInt32", &Pointer::getInt32),
   });
 
   constructor = Napi::Persistent(func);
