@@ -14,18 +14,28 @@ public:
   Pointer(const Napi::CallbackInfo &info);
   static void Init(Napi::Env env, Napi::Object exports);
 
-  static Napi::Value FromNativeValue(const Napi::Env env, void * ptr);
+  template<typename T>
+  static Napi::Object FromNativeValue(const Napi::Env env, T *ptr) {
+    Napi::HandleScope scope(env);
 
-  static Napi::Object New(const Napi::Buffer<std::size_t> arg) {
-      const auto env = arg.Env();
-      Napi::EscapableHandleScope scope(env);
-//      return scope.Escape(constructor.New({arg})).As<Napi::Object>();
-      return constructor.New({arg}).As<Napi::Object>();
+    const auto buffer = Napi::Buffer<std::size_t>::New(env, 1);
+    *(buffer.Data()) = reinterpret_cast<size_t>(ptr);
+    return Pointer::New(env, buffer);
+  }
+
+  static Napi::Object New(Napi::Env env, const Napi::Buffer<std::size_t> arg) {
+    Napi::HandleScope scope(env);
+    return constructor.New({arg});
+    //      Napi::EscapableHandleScope scope(env);
+    //      Napi::Object obj = constructor.New({arg});
+    //      return scope.Escape(napi_value(obj)).ToObject();
   }
 
   // TODO for debug only
   Napi::Value getInt32(const Napi::CallbackInfo &info) {
       const auto env = info.Env();
+      Napi::HandleScope scope(env);
+
       return Napi::Value::From(env, *reinterpret_cast<int*>(reinterpret_cast<void *>(*m_buffer.Data())));
   }
 
@@ -38,7 +48,7 @@ public:
       return m_buffer;
   }
 
-  template<typename T = void*>
+  template<typename T>
   T asPtr() { return reinterpret_cast<T>(reinterpret_cast<void *>(*(m_buffer.Data()))); }
 
 private:
@@ -92,14 +102,6 @@ void Pointer::Init(const Napi::Env env, Napi::Object exports) {
   constructor = Napi::Persistent(func);
   constructor.SuppressDestruct();
   exports.Set("Pointer", func);
-}
-
-Napi::Value Pointer::FromNativeValue(const Napi::Env env, void * ptr) {
-    Napi::EscapableHandleScope scope(env);
-
-    const auto buffer = Napi::Buffer<std::size_t>::New(env, 1);
-    *(buffer.Data()) = reinterpret_cast<size_t>(ptr);
-    return scope.Escape(Pointer::New(buffer)).As<Napi::Object>();
 }
 
 Napi::FunctionReference Library::constructor;

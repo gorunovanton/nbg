@@ -156,11 +156,12 @@ export namespace CPlusPlus {
             return `arg${index}`;
         }).join(', ');
 
-        const argTypes = func.arguments.map(value => makeCppType(value)).join(', ');
+        const argTypes = func.arguments.map(makeCppType).join(', ');
 
         return `${returnType} Library::${func.name}(const Napi::CallbackInfo& args){
     const auto env = args.Env();
-    const Napi::HandleScope scope(env);
+//    Napi::EscapableHandleScope scope(env);
+    Napi::HandleScope scope(env);
     
     if (args.Length() != ${func.arguments.length}) {
         throw Napi::Error::New(env, "Library.${func.name} take ${func.arguments.length} arguments, but args.Length() given");
@@ -168,8 +169,9 @@ export namespace CPlusPlus {
 
     ${argsParsing}
     try{
-        const auto function = m_library.get<${toCppType(func.returnType)}(${argTypes})>("${func.name}");
+        const auto function = m_library.get<${makeCppType(func.returnType)}(${argTypes})>("${func.name}");
         ${returnType === 'void' ? 'function();' :
+            // `return scope.Escape(${makeJsValue(func.returnType, `function(${argNames})`, 'env')});`}
             `return ${makeJsValue(func.returnType, `function(${argNames})`, 'env')};`}
     }
     catch(const std::exception& e){
@@ -193,7 +195,7 @@ export namespace CPlusPlus {
 
         return `
 struct ${structure.name} {
-${structure.members.map(value => `    ${toCppType(value)} ${value.name};`).join('\n')}
+${structure.members.map(value => `    ${makeCppType(value)} ${value.name};`).join('\n')}
 };
 
 class ${name} : public Napi::ObjectWrap<${name}> {
