@@ -142,5 +142,15 @@ describe('Library usage', () => {
             expect(ptr.getInt32()).toEqual(11);
             expect(lib.dereferenceInt(ptr)).toEqual(11);
         });
+
+        test('Use pointer to structure as function argument', () => {
+            const baseValue = 2;
+            const multiplierValue = 3;
+
+            const structClass = lib.addon.factors_s_wrapper;
+            const structInstance = new structClass({base: baseValue, multiplier: multiplierValue});
+
+            expect(lib.multiplyFromPtr(structInstance.asPointer())).toEqual(baseValue * multiplierValue);
+        });
     });
 });

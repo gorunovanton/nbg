@@ -220,6 +220,12 @@ ${setters}
         return *m_ptr;
     }
     
+    Napi::Value asPointer(const Napi::CallbackInfo &info) {
+        const auto env = info.Env();
+        Napi::HandleScope scope(env);
+        return Pointer::FromNativeValue(env, m_ptr);
+    }
+    
 private:
     static Napi::FunctionReference constructor;
     static Napi::Value getSize(const Napi::CallbackInfo& info);
@@ -273,7 +279,8 @@ Napi::Object ${name}::FromNativeValue(const Napi::Env env, ${structure.name} &&v
 void ${name}::Init(const Napi::Env env, Napi::Object exports) {
     const Napi::HandleScope scope(env);
     const auto definition = DefineClass(env, "${name}", {
-        StaticMethod("getSize", getSize), 
+        StaticMethod("getSize", getSize),
+        InstanceMethod("asPointer", &${name}::asPointer), 
 ${accessors}
     });
 

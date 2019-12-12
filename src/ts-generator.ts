@@ -52,6 +52,7 @@ export namespace TS {
         return `export interface I${getStructureWrapperName(struct.name)} {
     new(data?: {${constructorArguments}} | Buffer): I${getStructureWrapperName(struct.name)}
     getSize(): number
+    asPointer(): IPointer
     
 ${members}
 }`

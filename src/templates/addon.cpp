@@ -6,8 +6,6 @@
 #include <boost/dll/import.hpp>         // for dll::import
 #include <boost/dll/shared_library.hpp> // for dll::shared_library
 
-//NBG_STRUCTURES_DECLARATIONS
-//NBG_STRUCTURE_DEFINITIONS
 
 class Pointer : public Napi::ObjectWrap<Pointer> {
 public:
@@ -26,9 +24,6 @@ public:
   static Napi::Object New(Napi::Env env, const Napi::Buffer<std::size_t> arg) {
     Napi::HandleScope scope(env);
     return constructor.New({arg});
-    //      Napi::EscapableHandleScope scope(env);
-    //      Napi::Object obj = constructor.New({arg});
-    //      return scope.Escape(napi_value(obj)).ToObject();
   }
 
   // TODO for debug only
@@ -41,11 +36,8 @@ public:
 
   Napi::Value asBuffer(const Napi::CallbackInfo &info) {
     const auto env = info.Env();
-//    Napi::EscapableHandleScope scope(env);
-//    return scope.Escape(m_buffer);
-
-      Napi::HandleScope scope(env);
-      return m_buffer;
+    Napi::HandleScope scope(env);
+    return m_buffer;
   }
 
   template<typename T>
@@ -56,6 +48,9 @@ private:
 
   Napi::Buffer<std::size_t> m_buffer;
 }; // class pointer
+
+//NBG_STRUCTURES_DECLARATIONS
+//NBG_STRUCTURE_DEFINITIONS
 
 class Library : public Napi::ObjectWrap<Library> {
 public:

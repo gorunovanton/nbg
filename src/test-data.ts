@@ -69,6 +69,19 @@ export const testLibraryData: ILibraryData = {
                 mutable: false
             }]
         },
+        {
+            name: 'multiplyFromPtr',
+            returnType: {type: 'int32'},
+            arguments: [{
+                name: "sources",
+                type: 'pointer',
+                underlyingType: {
+                    type: 'structure',
+                    structureName: 'factors_s'
+                },
+                mutable: false
+            }]
+        },
     ]
 };
 

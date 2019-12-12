@@ -19,3 +19,7 @@ int *makeIntPtr() {
   return ptr;
 }
 int dereferenceInt(const int *const value) { return *value; }
+
+int multiplyFromPtr(const factors_s * const sources) {
+  return sources->base * sources->multiplier;
+}
