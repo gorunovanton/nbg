@@ -100,26 +100,27 @@ export namespace CPlusPlus {
         throw Error('Logic error. Unknown type.')
     }
 
-    function formatNapiGetter(nativeType: NativeTypeT) {
+    function formatNapiGetter(name: string, nativeType: NativeTypeT) {
         switch (nativeType) {
             case "structure":
                 throw new Error('Not yet implemented');
             case "pointer":
-                throw new Error('Not yet implemented');
+                // return `(Napi::ObjectWrap<Pointer>::Unwrap(${name}).As<Napi::Object>()))->asPtr<${cppType}>();`
+                return `(Napi::ObjectWrap<Pointer>::Unwrap(${name}.As<Napi::Object>()))->asPtr<int*>()`;
             case "void":
                 throw new Error('Logic error. Argument type cannot be void');
             case "int8":
-                return '.As<Napi::Number>().Int8Value()';
+                return `${name}.As<Napi::Number>().Int8Value()`;
             case "int16":
-                return '.As<Napi::Number>().Int16Value()';
+                return `${name}.As<Napi::Number>().Int16Value()`;
             case "int32":
-                return '.As<Napi::Number>().Int32Value()';
+                return `${name}.As<Napi::Number>().Int32Value()`;
             case "int64":
-                return '.As<Napi::Number>().Int64Value()';
+                return `${name}.As<Napi::Number>().Int64Value()`;
             case "float32":
-                return '.As<Napi::Number>().FloatValue()';
+                return `${name}.As<Napi::Number>().FloatValue()`;
             case "float64":
-                return '.As<Napi::Number>().DoubleValue()';
+                return `${name}.As<Napi::Number>().DoubleValue()`;
         }
         assertUnreachable(nativeType);
     }
@@ -134,8 +135,8 @@ export namespace CPlusPlus {
             const cppType = makeCppType(argument);
             return `${cppType} const arg${index} = (Napi::ObjectWrap<Pointer>::Unwrap(args[${index}].As<Napi::Object>()))->asPtr<${cppType}>();`
         }
-
-        return `const auto arg${index} = args[${index}]${formatNapiGetter(argument.type)};`
+        const name = `args[${index}]`;
+        return `const auto arg${index} = ${formatNapiGetter(name, argument.type)};`
     }
 
     export function makeFunctionDeclaration(func: IFunction) {
@@ -170,8 +171,7 @@ export namespace CPlusPlus {
     ${argsParsing}
     try{
         const auto function = m_library.get<${makeCppType(func.returnType)}(${argTypes})>("${func.name}");
-        ${returnType === 'void' ? 'function();' :
-            // `return scope.Escape(${makeJsValue(func.returnType, `function(${argNames})`, 'env')});`}
+        ${returnType === 'void' ? `function(${argNames});` :
             `return ${makeJsValue(func.returnType, `function(${argNames})`, 'env')};`}
     }
     catch(const std::exception& e){
@@ -190,7 +190,7 @@ export namespace CPlusPlus {
 
         const setters = structure.members.map(value => {
             const setterName = `Set${capitalizeFirstLetter(toCamelCase(value.name))}`;
-            return `    void ${name}::${setterName}(const Napi::CallbackInfo &info, const Napi::Value &value);`
+            return `    void ${setterName}(const Napi::CallbackInfo &info, const Napi::Value &value);`
         }).join('\n');
 
         return `
@@ -241,10 +241,12 @@ private:
 
         const getters = structure.members.map(value => {
             const getterName = `Get${capitalizeFirstLetter(toCamelCase(value.name))}`;
+
+            const jsValue = makeJsValue(value,  `m_ptr->${value.name}`, 'env');
             return `` +
                 `Napi::Value ${name}::${getterName}(const Napi::CallbackInfo &info) {\n` +
                 `   Napi::Env env = info.Env();\n` +
-                `   return Napi::Value::From(env, m_ptr->${value.name});\n` +
+                `   return ${jsValue};` +
                 `}`
         }).join('\n\n');
 
@@ -254,7 +256,7 @@ private:
             return `` +
                 `void ${name}::${setterName}(const Napi::CallbackInfo &info, const Napi::Value &value) {\n` +
                 `   Napi::Env env = info.Env();\n` +
-                `   m_ptr->${value.name} = value${formatNapiGetter(value.type)};\n` +
+                `   m_ptr->${value.name} = ${formatNapiGetter('value', value.type)};\n` +
                 `}`
         }).join('\n\n');
 
@@ -265,7 +267,8 @@ private:
         }).join(',\n');
 
         const fromObjectInitialization = structure.members.map(value => {
-            return `        m_ptr->${value.name} = object.Get("${value.name}")${formatNapiGetter(value.type)};`
+            const fieldGetter = `object.Get("${value.name}")`;
+            return `        m_ptr->${value.name} = ${formatNapiGetter(fieldGetter, value.type)};`
         }).join('\n');
 
         return `Napi::FunctionReference ${name}::constructor;

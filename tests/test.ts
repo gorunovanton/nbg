@@ -152,5 +152,14 @@ describe('Library usage', () => {
 
             expect(lib.multiplyFromPtr(structInstance.asPointer())).toEqual(baseValue * multiplierValue);
         });
+
+        test('Use pointer as structure member', () => {
+            const structClass = lib.addon.int_ptr_holder_s_wrapper;
+            const structInstance = new structClass();
+            const expectedValue = 42;
+
+            lib.fillIntPtrHolder(structInstance.asPointer());
+            expect(structInstance.ptr.getInt32()).toEqual(expectedValue)
+        });
     });
 });

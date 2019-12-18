@@ -20,6 +20,11 @@ int *makeIntPtr() {
 }
 int dereferenceInt(const int *const value) { return *value; }
 
-int multiplyFromPtr(const factors_s * const sources) {
+int multiplyFromPtr(const factors_s *const sources) {
   return sources->base * sources->multiplier;
+}
+
+void fill_int_ptr_holder(int_ptr_holder_s *const destination) {
+  destination->ptr = new int;
+  *(destination->ptr) = 42;
 }

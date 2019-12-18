@@ -1,19 +1,32 @@
 import {ILibraryData} from "./common";
 
 export const testLibraryData: ILibraryData = {
-    structures: [{
-        name: 'factors_s',
-        members: [
-            {
-                name: 'base',
-                type: 'int32'
-            },
-            {
-                name: 'multiplier',
-                type: 'int32'
-            }
-        ]
-    }],
+    structures: [
+        {
+            name: 'factors_s',
+            members: [
+                {
+                    name: 'base',
+                    type: 'int32'
+                },
+                {
+                    name: 'multiplier',
+                    type: 'int32'
+                }
+            ]
+        },
+        {
+            name: 'int_ptr_holder_s',
+            members: [
+                {
+                    name: 'ptr',
+                    type: 'pointer',
+                    underlyingType: {type: 'int32'},
+                    mutable: true
+                }
+            ]
+        }
+    ],
     functions: [
         {
             name: 'hello',
@@ -82,6 +95,19 @@ export const testLibraryData: ILibraryData = {
                 mutable: false
             }]
         },
+        {
+            name: 'fill_int_ptr_holder',
+            returnType: {type: 'void'},
+            arguments: [{
+                name: 'destination',
+                type: 'pointer',
+                underlyingType: {
+                    type: "structure",
+                    structureName: 'int_ptr_holder_s',
+                },
+                mutable: true
+            }]
+        }
     ]
 };
 

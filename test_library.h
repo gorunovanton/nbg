@@ -12,6 +12,10 @@ struct factors_s {
   int multiplier;
 };
 
+struct int_ptr_holder_s {
+    int *ptr;
+};
+
 API_EXPORT void hello();
 API_EXPORT int get_five();
 API_EXPORT int duplicate(int original);
@@ -20,6 +24,7 @@ API_EXPORT factors_s create_factors();
 API_EXPORT int* makeIntPtr();
 API_EXPORT int dereferenceInt(const int *value);
 API_EXPORT int multiplyFromPtr(const factors_s * sources);
+API_EXPORT void fill_int_ptr_holder(int_ptr_holder_s *destination);
 
 #ifdef __cplusplus
 }
