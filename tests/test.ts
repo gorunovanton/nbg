@@ -4,7 +4,8 @@ import * as os from 'os'
 
 const libraryExtension = os.platform() === 'win32' ? '.dll' : '.so';
 // const testLibraryPath = path.join(process.cwd(), 'cmake-build-release', `test_library${libraryExtension}`);
-const testLibraryPath = path.join(process.cwd(), 'cmake-build-debug', `test_library${libraryExtension}`);
+const libraryPrefix = os.platform() === 'win32' ? '' : 'lib';
+const testLibraryPath = path.join(process.cwd(), 'cmake-build-debug', `${libraryPrefix}test_library${libraryExtension}`);
 
 test('Library load', () => {
     const lib = new Library(testLibraryPath);

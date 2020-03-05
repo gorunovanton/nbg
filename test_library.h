@@ -1,7 +1,10 @@
 #ifndef NBG_LIBRARY_H
 #define NBG_LIBRARY_H
-
+#if defined(_WIN32) || defined(WIN32)
 #define API_EXPORT __declspec(dllexport)
+#elif defined(unix)
+#define API_EXPORT __attribute__ ((visibility ("default")))
+#endif
 
 #ifdef __cplusplus
 extern "C" {
