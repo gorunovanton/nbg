@@ -2,7 +2,7 @@ import {getStructureWrapperName, IFunction, IStructure, ITypeDescriptor} from ".
 import {toCamelCase} from "./utils";
 
 export namespace TS {
-    function toTsType(typeDescription: ITypeDescriptor) {
+    function toTsType(typeDescription: ITypeDescriptor): string {
         switch (typeDescription.type) {
             case "structure":
                 return `I${getStructureWrapperName(typeDescription.structureName)}`;
@@ -17,6 +17,8 @@ export namespace TS {
             case "float32":
             case "float64":
                 return 'number';
+            case "function":
+                return `IPointer | ((${typeDescription.arguments.map(toTsType).join(', ')}) => ${toTsType(typeDescription.returnType)})`
         }
         throw Error('Logic error. Unhandled type')
         // assertUnreachable(typeDescription.type);

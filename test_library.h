@@ -19,6 +19,8 @@ struct int_ptr_holder_s {
     int *ptr;
 };
 
+typedef int (*trivialCallback)();
+
 API_EXPORT void hello();
 API_EXPORT int get_five();
 API_EXPORT int duplicate(int original);
@@ -28,7 +30,8 @@ API_EXPORT int* makeIntPtr();
 API_EXPORT int dereferenceInt(const int *value);
 API_EXPORT int multiplyFromPtr(const factors_s * sources);
 API_EXPORT void fill_int_ptr_holder(int_ptr_holder_s *destination);
-
+API_EXPORT int processTrivialCallback(trivialCallback callback);
+API_EXPORT trivialCallback getTrivialCallback();
 #ifdef __cplusplus
 }
 #endif

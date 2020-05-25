@@ -1,10 +1,4 @@
-import {
-    getStructureWrapperName,
-    IFunction,
-    ITypeDescriptor,
-    IStructure,
-    NativeTypeT
-} from "./common";
+import {getStructureWrapperName, IFunction, IStructure, ITypeDescriptor, NativeTypeT} from "./common";
 import {assertUnreachable, capitalizeFirstLetter, toCamelCase} from "./utils";
 
 export namespace CPlusPlus {
@@ -70,6 +64,8 @@ export namespace CPlusPlus {
                 return 'float';
             case 'float64':
                 return 'double';
+            case "function":
+                return `${makeCppType(argData.returnType)} (*)(${argData.arguments.map(makeCppType).join(', ')})`
         }
         // TODO fix assertion
         // assertUnreachable(argData.type);
@@ -80,6 +76,8 @@ export namespace CPlusPlus {
 
     function makeJsValue(typeDescriptor: ITypeDescriptor, expression: string, envName: string): string {
         switch (typeDescriptor.type) {
+            case "function":
+                return `Pointer::FromNativeValue(${envName}, ${expression})`;
             case 'structure':
                 const structureWrappedName = getStructureWrapperName(typeDescriptor.structureName);
                 return `${structureWrappedName}::FromNativeValue(${envName}, ${expression})`;
@@ -100,13 +98,12 @@ export namespace CPlusPlus {
         throw Error('Logic error. Unknown type.')
     }
 
-    function formatNapiGetter(name: string, nativeType: NativeTypeT) {
-        switch (nativeType) {
+    function formatNapiGetter(name: string, type: ITypeDescriptor) {
+        switch (type.type) {
             case "structure":
                 throw new Error('Not yet implemented');
             case "pointer":
-                // return `(Napi::ObjectWrap<Pointer>::Unwrap(${name}).As<Napi::Object>()))->asPtr<${cppType}>();`
-                return `(Napi::ObjectWrap<Pointer>::Unwrap(${name}.As<Napi::Object>()))->asPtr<int*>()`;
+                return `(Napi::ObjectWrap<Pointer>::Unwrap(${name}.As<Napi::Object>()))->asPtr<${makeCppType(type)}>()`;
             case "void":
                 throw new Error('Logic error. Argument type cannot be void');
             case "int8":
@@ -121,8 +118,13 @@ export namespace CPlusPlus {
                 return `${name}.As<Napi::Number>().FloatValue()`;
             case "float64":
                 return `${name}.As<Napi::Number>().DoubleValue()`;
+            case "function":
+                const argTypes = type.arguments.map(makeCppType).join(', ');
+                const returnType = makeCppType(type.returnType);
+                const functionType = `${returnType} (*)(${argTypes})`;
+                return `(Napi::ObjectWrap<Pointer>::Unwrap(${name}.As<Napi::Object>()))->asPtr<${functionType}>()`;
         }
-        assertUnreachable(nativeType);
+        assertUnreachable(type);
     }
 
     function makeArgumentReader(argument: ITypeDescriptor, index: number) {
@@ -136,7 +138,7 @@ export namespace CPlusPlus {
             return `${cppType} const arg${index} = (Napi::ObjectWrap<Pointer>::Unwrap(args[${index}].As<Napi::Object>()))->asPtr<${cppType}>();`
         }
         const name = `args[${index}]`;
-        return `const auto arg${index} = ${formatNapiGetter(name, argument.type)};`
+        return `const auto arg${index} = ${formatNapiGetter(name, argument)};`
     }
 
     export function makeFunctionDeclaration(func: IFunction) {
@@ -256,7 +258,7 @@ private:
             return `` +
                 `void ${name}::${setterName}(const Napi::CallbackInfo &info, const Napi::Value &value) {\n` +
                 `   Napi::Env env = info.Env();\n` +
-                `   m_ptr->${value.name} = ${formatNapiGetter('value', value.type)};\n` +
+                `   m_ptr->${value.name} = ${formatNapiGetter('value', value)};\n` +
                 `}`
         }).join('\n\n');
 
@@ -268,7 +270,7 @@ private:
 
         const fromObjectInitialization = structure.members.map(value => {
             const fieldGetter = `object.Get("${value.name}")`;
-            return `        m_ptr->${value.name} = ${formatNapiGetter(fieldGetter, value.type)};`
+            return `        m_ptr->${value.name} = ${formatNapiGetter(fieldGetter, value)};`
         }).join('\n');
 
         return `Napi::FunctionReference ${name}::constructor;

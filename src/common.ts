@@ -1,5 +1,5 @@
 export type NativeTrivialTypeT = 'void' | 'int8' | 'int16' | 'int32' | 'int64' | 'float32' | 'float64'
-export type NativeTypeT = 'pointer' | 'structure' | NativeTrivialTypeT
+export type NativeTypeT = 'pointer' | 'structure' | 'function' | NativeTrivialTypeT
 
 interface IBaseTypeDescriptor {
     type: NativeTypeT
@@ -14,13 +14,19 @@ export interface IStructureTypeDescriptor extends IBaseTypeDescriptor {
     structureName: string
 }
 
+export interface FunctionTypeDescriptor extends IBaseTypeDescriptor {
+    type: 'function'
+    returnType: ITypeDescriptor
+    arguments: Array<ITypeDescriptor>
+}
+
 export interface IPointerTypeDescriptor extends IBaseTypeDescriptor {
     type: 'pointer'
     underlyingType: ITypeDescriptor
     mutable: boolean
 }
 
-export type ITypeDescriptor = ITrivialTypeDescriptor | IStructureTypeDescriptor | IPointerTypeDescriptor
+export type ITypeDescriptor = ITrivialTypeDescriptor | IStructureTypeDescriptor | IPointerTypeDescriptor | FunctionTypeDescriptor
 
 export interface INamedParameter {
     name: string

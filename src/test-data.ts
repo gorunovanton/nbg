@@ -107,7 +107,29 @@ export const testLibraryData: ILibraryData = {
                 },
                 mutable: true
             }]
-        }
+        },
+        {
+            name: 'processTrivialCallback',
+            returnType: {type: "int32"},
+            arguments: [{
+                name: 'callback',
+                type: 'function',
+                returnType: {type: "int32"},
+                arguments: [
+                ]
+            }]
+        },
+        {
+            name: 'getTrivialCallback',
+            returnType: {
+                type: "pointer",
+                underlyingType: {
+                    type: "void",
+                },
+                mutable: true
+            },
+            arguments: []
+        },
     ]
 };
 

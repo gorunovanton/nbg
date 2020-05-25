@@ -163,4 +163,13 @@ describe('Library usage', () => {
             expect(structInstance.ptr.getInt32()).toEqual(expectedValue)
         });
     });
+    describe('Callbacks', () => {
+        test('Use callback as function argument', () => {
+            const callback = lib.getTrivialCallback()
+            const result = lib.processTrivialCallback(callback)
+
+            const expectedValue = 5;
+            expect(result).toEqual(expectedValue)
+        });
+    });
 });

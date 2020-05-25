@@ -28,3 +28,13 @@ void fill_int_ptr_holder(int_ptr_holder_s *const destination) {
   destination->ptr = new int;
   *(destination->ptr) = 42;
 }
+
+int processTrivialCallback(trivialCallback callback) {
+  return callback();
+}
+
+trivialCallback getTrivialCallback(){
+  return get_five;
+}
+
+
